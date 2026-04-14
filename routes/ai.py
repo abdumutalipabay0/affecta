@@ -110,9 +110,11 @@ def analyze_video():
         client = HumeClient(api_key=_HUME_KEY)
         batch  = client.expression_measurement.batch
 
+        mime_type = "video/mp4" if suffix == ".mp4" else "video/webm"
+        filename  = f"recording{suffix}"
         with open(tmp_path, "rb") as f:
             job_id = batch.start_inference_job_from_local_file(
-                file=[("file", f)],
+                file=[(filename, f, mime_type)],
                 json=InferenceBaseRequest(models=Models(face=Face())),
             )
 
