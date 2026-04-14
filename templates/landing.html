@@ -146,68 +146,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   object-fit:cover;display:block;border-radius:0;
   transition:opacity 0.6s ease;opacity:0}
 
-/* ── Emotion panel ───────────────────────────────────────────────────────── */
-.mock-overlay-panel{
-  position:absolute;bottom:0;left:0;right:0;
-  padding:14px 16px 12px;
-  background:linear-gradient(135deg,rgba(0,0,0,0.9) 0%,rgba(15,15,30,0.95) 100%);
-  backdrop-filter:blur(20px) saturate(200%);
-  display:flex;flex-direction:column;gap:10px;
-  /* Subtle scanline overlay */
-  background-image:
-    linear-gradient(135deg,rgba(0,0,0,0.9) 0%,rgba(15,15,30,0.95) 100%),
-    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.012) 2px,rgba(255,255,255,0.012) 4px);
-}
-
-/* Three-zone row */
-.mock-emo-row{display:flex;align-items:center;gap:12px}
-
-/* Left — pulsing dot ring */
-.mock-emo-ring{
-  width:36px;height:36px;border-radius:50%;
-  flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,0.04);
-  border:2px solid var(--emo-col,#4ade80);
-  box-shadow:0 0 10px var(--emo-col,#4ade80);
-  transition:border-color 0.5s ease,box-shadow 0.5s ease;
-}
-.mock-emo-dot{
-  width:12px;height:12px;border-radius:50%;
-  background:var(--emo-col,#4ade80);
-  box-shadow:0 0 6px var(--emo-col,#4ade80);
-  animation:emopulse 2s ease infinite;
-  transition:background 0.5s ease,box-shadow 0.5s ease;
-}
-@keyframes emopulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:0.7}}
-
-/* Center */
-.mock-emo-center{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
-.mock-emo-label{
-  font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;
-  color:rgba(255,255,255,0.3)
-}
-.mock-emo-name{
-  font-size:18px;font-weight:700;color:#fff;
-  letter-spacing:-0.01em;line-height:1;
-}
-
-/* Right — confidence number */
-.mock-emo-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
-.mock-conf-big{
-  font-size:28px;font-weight:800;line-height:1;
-  background:linear-gradient(135deg,var(--emo-col,#4ade80),#fff);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  transition:background 0.5s ease;
-}
-.mock-conf-tiny{font-size:9px;font-weight:600;color:rgba(255,255,255,0.3);
-  letter-spacing:0.1em;text-transform:uppercase}
-
-/* Bottom bar */
-.mock-conf-bar-wrap{height:2px;border-radius:1px;background:rgba(255,255,255,0.06);overflow:hidden}
-.mock-conf-fill{height:100%;border-radius:1px;
-  background:linear-gradient(90deg,var(--emo-col,#4ade80),#fff);
-  width:0%;transition:width 0.8s ease,background 0.5s ease}
+/* ── Emotion panel — removed ─────────────────────────────────────────────── */
 
 /* ── MARQUEE ────────────────────────────────────────────────────────────── */
 .marquee-section{border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);
@@ -472,28 +411,6 @@ footer{border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;p
         </div>
         <div class="mock-photo-wrap">
           <img id="mockPhoto" src="" alt="speaker">
-          <div class="mock-overlay-panel">
-            <div class="mock-emo-row">
-              <!-- Left: pulsing ring -->
-              <div class="mock-emo-ring" id="mockEmoRing">
-                <span class="mock-emo-dot" id="mockEmoDot"></span>
-              </div>
-              <!-- Center: label + name -->
-              <div class="mock-emo-center">
-                <span class="mock-emo-label">Emotion detected</span>
-                <span class="mock-emo-name" id="mockLabel">Happy</span>
-              </div>
-              <!-- Right: big % -->
-              <div class="mock-emo-right">
-                <span class="mock-conf-big" id="mockConfValue">87%</span>
-                <span class="mock-conf-tiny">confidence</span>
-              </div>
-            </div>
-            <!-- Bottom confidence bar -->
-            <div class="mock-conf-bar-wrap">
-              <div class="mock-conf-fill" id="mockConfBar"></div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -816,7 +733,7 @@ const navbar=document.getElementById('navbar');
 window.addEventListener('scroll',()=>navbar.classList.toggle('scrolled',scrollY>24),{passive:true});
 
 /* Photos */
-const photos=['/static/images/IMG_2603.jpg','/static/images/IMG_2604.jpg','/static/images/istockphoto-1376381279-612x612.jpg'];
+const photos=['/static/images/photo1.png','/static/images/photo2.jpeg','/static/images/photo3.jpeg'];
 const mockPhoto=document.getElementById('mockPhoto');
 let pIdx=0;
 function loadImg(s){return new Promise(r=>{const i=new Image();i.onload=r;i.onerror=r;i.src=s})}
@@ -824,27 +741,7 @@ async function initPhotos(){await Promise.all(photos.map(loadImg));mockPhoto.src
 function cyclePhoto(){mockPhoto.style.opacity='0';setTimeout(()=>{pIdx=(pIdx+1)%photos.length;mockPhoto.src=photos[pIdx];mockPhoto.style.opacity='1'},600)}
 initPhotos();setInterval(cyclePhoto,3500);
 
-/* Emotions */
-const emos=[
-  {l:'Happy',    c:87, col:'#4ade80'},
-  {l:'Neutral',  c:62, col:'#94a3b8'},
-  {l:'Surprised',c:74, col:'#fbbf24'},
-  {l:'Confident',c:91, col:'#3b82f6'},
-];
-const mPanel=document.querySelector('.mock-overlay-panel');
-const mLabel=document.getElementById('mockLabel');
-const mVal=document.getElementById('mockConfValue'),mBar=document.getElementById('mockConfBar');
-let eIdx=0;
-function cycleEmo(){
-  const e=emos[eIdx%emos.length];eIdx++;
-  /* Update CSS custom property — drives ring border, dot bg, bar gradient, big number gradient */
-  mPanel.style.setProperty('--emo-col',e.col);
-  mLabel.textContent=e.l;
-  mVal.textContent=e.c+'%';
-  mBar.style.width='0%';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{mBar.style.width=e.c+'%'}));
-}
-cycleEmo();setInterval(cycleEmo,2500);
+/* Emotions — removed (clean photo only) */
 
 /* Parallax tilt */
 if(window.matchMedia('(hover:hover)').matches){

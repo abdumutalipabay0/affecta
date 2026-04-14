@@ -2,7 +2,7 @@
 Affecta — Flask web application.
 
 Run:  python3 app.py
-Then: http://localhost:8080  (opens automatically)
+Then: http://localhost:8090  (opens automatically)
 
 Architecture
 ────────────
@@ -55,8 +55,8 @@ Google OAuth setup (Supabase Dashboard):
   3. Google Console → OAuth Client → Authorised redirect URIs:
      https://<your-supabase-ref>.supabase.co/auth/v1/callback
   4. Supabase → Authentication → URL Configuration:
-     Site URL = http://localhost:8080
-     Redirect URLs: http://localhost:8080/auth/callback
+     Site URL = http://localhost:8090
+     Redirect URLs: http://localhost:8090/auth/callback
 """
 
 import os
@@ -112,8 +112,8 @@ if __name__ == "__main__":
     def _open_browser():
         import time
         time.sleep(1.2)
-        webbrowser.open("http://localhost:8080")
+        webbrowser.open("http://localhost:8090")
 
     threading.Thread(target=_open_browser, daemon=True).start()
-    print("Affecta starting → http://localhost:8080")
-    app.run(host="0.0.0.0", port=8080, debug=False, threaded=True)
+    print("Affecta starting → http://localhost:8090")
+    app.run(host="0.0.0.0", port=8090, debug=False, threaded=True)

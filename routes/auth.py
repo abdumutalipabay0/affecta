@@ -57,8 +57,15 @@ def auth_set_session():
 def auth_google():
     result = supabase.auth.sign_in_with_oauth({
         "provider": "google",
-        "options":  {"redirect_to": "http://localhost:8080/auth/callback"},
+        "options":  {"redirect_to": "http://localhost:8090/auth/callback"},
     })
+    # Persist the PKCE code_verifier across requests (shared in-memory storage
+    # is unreliable between the OAuth redirect and the exchange callback).
+    verifier = supabase.auth._storage.get_item(
+        f"{supabase.auth._storage_key}-code-verifier"
+    )
+    if verifier:
+        flask_session["pkce_verifier"] = verifier
     return redirect(result.url)
 
 
@@ -68,7 +75,11 @@ def auth_exchange():
     if not code:
         return jsonify({"error": "missing code"}), 400
     try:
-        result = supabase.auth.exchange_code_for_session({"auth_code": code})
+        verifier = flask_session.pop("pkce_verifier", None)
+        result = supabase.auth.exchange_code_for_session({
+            "auth_code": code,
+            **({"code_verifier": verifier} if verifier else {}),
+        })
         user   = result.user
         sess   = result.session
         flask_session.permanent = True
