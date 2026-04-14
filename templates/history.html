@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav class="hist-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">A</div>
+    <span>Affecta</span>
+  </a>
+  <div class="nav-links">
+    <a href="/coach" class="nav-link">Coach</a>
+    <a href="/history" class="nav-link active">History</a>
+    <a href="/progress" class="nav-link">Progress</a>
+    <a href="/profile" class="nav-link">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
+
+<div class="hist-wrap">
+<div class="hist-content">
+
+  <!-- ── PAGE HEADER ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Session History</h1>
+      <p>Track your progress and review past sessions</p>
+    </div>
+    <button class="new-session-btn" onclick="window.location.href='/coach'">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
+      </svg>
+      New Session
+    </button>
+  </div>
+
+  <!-- ── PROGRESS OVERVIEW ─────────────────────────────────────────────────── -->
+  <div class="progress-overview glass" id="progressOverview">
+    <div class="progress-header">
+      <div class="progress-title">Score Progress (last 10 sessions)</div>
+      <button class="progress-btn" onclick="openProgressModal()">Full Analysis</button>
+    </div>
+    <div class="progress-chart-wrap">
+      <canvas class="sparkline-canvas" id="progressChart"></canvas>
+    </div>
+    <div class="progress-stats" id="progressStats">
+      <div>
+        <div class="prog-stat-val" id="statBest">—</div>
+        <div class="prog-stat-lbl">Best Score</div>
+      </div>
+      <div>
+        <div class="prog-stat-val" id="statAvg">—</div>
+        <div class="prog-stat-lbl">Avg Score</div>
+      </div>
+      <div>
+        <div class="prog-stat-val" id="statSessions">—</div>
+        <div class="prog-stat-lbl">Total Sessions</div>
+      </div>
+      <div>
+        <div class="prog-stat-val" id="statTrend">—</div>
+        <div class="prog-stat-lbl">Trend</div>
+        <div class="prog-stat-delta" id="statTrendDelta"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SESSIONS LIST ─────────────────────────────────────────────────────── -->
+  <div class="sessions-header">
+    <span class="sessions-count" id="sessionsCount">Loading…</span>
+    <div class="filter-row" id="filterRow">
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-chip" data-filter="ielts" onclick="setFilter('ielts')">IELTS</button>
+      <button class="filter-chip" data-filter="pitch" onclick="setFilter('pitch')">Pitch &amp; Interview</button>
+      <button class="filter-chip" data-filter="free" onclick="setFilter('free')">Free Talk</button>
+    </div>
+  </div>
+
+  <div class="sessions-grid" id="sessionsGrid">
+    <!-- Skeleton loading -->
+    <div class="skeleton-card">
+      <div class="skel-line"></div>
+      <div class="skel-line short"></div>
+      <div class="skel-line shorter"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skel-line"></div>
+      <div class="skel-line short"></div>
+      <div class="skel-line shorter"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skel-line"></div>
+      <div class="skel-line short"></div>
+      <div class="skel-line shorter"></div>
+    </div>
+  </div>
+
+</div><!-- /hist-content -->
+</div><!-- /hist-wrap -->
+
+<!-- ── PROGRESS MODAL ────────────────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="progressModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>Progress Analysis</h2>
+      <button class="modal-close" onclick="closeProgressModal()">✕</button>
+    </div>
+    <div class="modal-body" id="progressModalBody">
+      <div class="modal-meta" id="progressModalMeta"></div>
+      <div class="feedback-content" id="progressFeedbackContent">
+        <div style="display:flex;align-items:center;gap:10px;color:#52525b">
+          <div style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.08);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+          Generating analysis…
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SESSION DETAIL MODAL ───────────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="sessionModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 id="sessionModalTitle">Session Detail</h2>
+      <button class="modal-close" onclick="closeSessionModal()">✕</button>
+    </div>
+    <div class="modal-body" id="sessionModalBody"></div>
+  </div>
+</div>
+
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+</body>
+</html>

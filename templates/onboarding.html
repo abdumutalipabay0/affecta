@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — Welcome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/onboarding.css') }}">
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<div class="ob-wrap">
+
+  <!-- Progress dots -->
+  <div class="ob-dots" id="obDots">
+    <div class="ob-dot active" data-step="1"></div>
+    <div class="ob-dot" data-step="2"></div>
+    <div class="ob-dot" data-step="3"></div>
+    <div class="ob-dot" data-step="4"></div>
+  </div>
+
+  <!-- Slide container -->
+  <div class="ob-viewport">
+    <div class="ob-slides" id="obSlides">
+
+      <!-- ── STEP 1: Welcome ──────────────────────────────────────────────── -->
+      <div class="ob-step" id="obStep1">
+        <div class="ob-logo">
+          <div class="ob-logo-icon">A</div>
+        </div>
+        <h1 class="ob-title">Welcome to <span class="ob-brand">Affecta</span></h1>
+        <p class="ob-sub">Your AI speaking coach for IELTS, pitch practice, and confident communication. Let's build your personalized plan in 2 minutes.</p>
+        <div class="ob-feature-list">
+          <div class="ob-feature"><span class="ob-feature-icon">🎯</span><span>Band-score feedback on every session</span></div>
+          <div class="ob-feature"><span class="ob-feature-icon">🎭</span><span>Real-time emotion & confidence tracking</span></div>
+          <div class="ob-feature"><span class="ob-feature-icon">📈</span><span>Skill progress map across sessions</span></div>
+        </div>
+        <button class="ob-btn-primary" onclick="goToStep(2)">Get Started →</button>
+      </div>
+
+      <!-- ── STEP 2: Current Band ─────────────────────────────────────────── -->
+      <div class="ob-step" id="obStep2">
+        <div class="ob-step-badge">Step 1 of 3</div>
+        <h2 class="ob-title">What's your current IELTS level?</h2>
+        <p class="ob-sub">Pick the band score that best describes where you are right now. Not sure? Choose your best estimate.</p>
+
+        <div class="band-grid" id="bandGrid">
+          <button class="band-card" data-band="4.0" onclick="selectBand(this)">
+            <div class="band-num">4.0</div>
+            <div class="band-desc">Beginner</div>
+          </button>
+          <button class="band-card" data-band="4.5" onclick="selectBand(this)">
+            <div class="band-num">4.5</div>
+            <div class="band-desc">Elementary</div>
+          </button>
+          <button class="band-card" data-band="5.0" onclick="selectBand(this)">
+            <div class="band-num">5.0</div>
+            <div class="band-desc">Modest</div>
+          </button>
+          <button class="band-card" data-band="5.5" onclick="selectBand(this)">
+            <div class="band-num">5.5</div>
+            <div class="band-desc">Competent</div>
+          </button>
+          <button class="band-card" data-band="6.0" onclick="selectBand(this)">
+            <div class="band-num">6.0</div>
+            <div class="band-desc">Competent+</div>
+          </button>
+          <button class="band-card" data-band="6.5" onclick="selectBand(this)">
+            <div class="band-num">6.5+</div>
+            <div class="band-desc">Good</div>
+          </button>
+        </div>
+
+        <div class="ob-nav">
+          <button class="ob-btn-ghost" onclick="goToStep(1)">← Back</button>
+          <button class="ob-btn-primary" id="step2Next" onclick="goToStep(3)" disabled>Continue →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Goal ─────────────────────────────────────────────────── -->
+      <div class="ob-step" id="obStep3">
+        <div class="ob-step-badge">Step 2 of 3</div>
+        <h2 class="ob-title">Set your goals</h2>
+        <p class="ob-sub">Where do you want to get to, and when?</p>
+
+        <div class="goal-section">
+          <div class="goal-label">Target band score</div>
+          <div class="slider-wrap">
+            <span class="slider-min">5.0</span>
+            <input type="range" id="targetSlider" min="50" max="90" step="5" value="70"
+                   oninput="updateSlider(this)">
+            <span class="slider-max">9.0</span>
+          </div>
+          <div class="slider-value-wrap">
+            <div class="slider-value" id="sliderValue">7.0</div>
+            <div class="slider-value-label">target band</div>
+          </div>
+        </div>
+
+        <div class="goal-section">
+          <div class="goal-label">Exam date <span class="goal-optional">(optional)</span></div>
+          <input type="date" id="examDate" class="ob-date-input"
+                 min="{{ today }}" placeholder="Pick a date">
+        </div>
+
+        <div class="goal-section">
+          <div class="goal-label">Primary focus</div>
+          <div class="focus-grid">
+            <button class="focus-card" data-goal="fluency" onclick="selectGoal(this)">
+              <div class="focus-icon">🗣️</div>
+              <div class="focus-name">Fluency</div>
+              <div class="focus-desc">Speak without hesitation</div>
+            </button>
+            <button class="focus-card" data-goal="vocabulary" onclick="selectGoal(this)">
+              <div class="focus-icon">📚</div>
+              <div class="focus-name">Vocabulary</div>
+              <div class="focus-desc">Richer word choice</div>
+            </button>
+            <button class="focus-card" data-goal="confidence" onclick="selectGoal(this)">
+              <div class="focus-icon">💪</div>
+              <div class="focus-name">Confidence</div>
+              <div class="focus-desc">Calm under pressure</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="ob-nav">
+          <button class="ob-btn-ghost" onclick="goToStep(2)">← Back</button>
+          <button class="ob-btn-primary" id="step3Next" onclick="goToStep(4)" disabled>Continue →</button>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: Ready ────────────────────────────────────────────────── -->
+      <div class="ob-step" id="obStep4">
+        <div class="ob-ready-check">✓</div>
+        <h2 class="ob-title">Your plan is ready!</h2>
+        <p class="ob-sub">Here's what we've set up for you.</p>
+
+        <div class="plan-card glass">
+          <div class="plan-row">
+            <span class="plan-label">Starting from</span>
+            <span class="plan-val" id="planCurrent">Band 5.0</span>
+          </div>
+          <div class="plan-arrow">↓</div>
+          <div class="plan-row plan-row-target">
+            <span class="plan-label">Target</span>
+            <span class="plan-val plan-val-target" id="planTarget">Band 7.0</span>
+          </div>
+          <div class="plan-divider"></div>
+          <div class="plan-row">
+            <span class="plan-label">Exam date</span>
+            <span class="plan-val" id="planExam">Not set</span>
+          </div>
+          <div class="plan-row">
+            <span class="plan-label">Primary focus</span>
+            <span class="plan-val" id="planGoal">Fluency</span>
+          </div>
+        </div>
+
+        <button class="ob-btn-primary ob-btn-lg" id="startBtn" onclick="submitOnboarding()">
+          Start Practicing →
+        </button>
+        <div class="ob-saving hidden" id="obSaving">Saving your plan…</div>
+        <div class="ob-error hidden" id="obError"></div>
+      </div>
+
+    </div><!-- /ob-slides -->
+  </div><!-- /ob-viewport -->
+
+</div><!-- /ob-wrap -->
+
+<script src="{{ url_for('static', filename='js/onboarding.js') }}"></script>
+</body>
+</html>

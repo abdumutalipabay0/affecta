@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav class="pro-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">A</div>
+    <span>Affecta</span>
+  </a>
+  <div class="nav-links">
+    <a href="/coach" class="nav-link">Coach</a>
+    <a href="/history" class="nav-link">History</a>
+    <a href="/progress" class="nav-link">Progress</a>
+    <a href="/profile" class="nav-link active">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
+
+<div class="pro-wrap">
+
+  <!-- ── ZONE 1: HEADER ─────────────────────────────────────────────────── -->
+  <header class="pro-header">
+    <div class="pro-identity">
+      <div class="pro-avatar" id="proAvatar"></div>
+      <div class="pro-meta">
+        <span class="pro-email" id="proEmail">—</span>
+        <span class="pro-since" id="proSince">—</span>
+      </div>
+    </div>
+    <button class="btn-logout" id="btnLogout">Sign out</button>
+  </header>
+
+  <!-- ── ZONE 2: STATS HERO ─────────────────────────────────────────────── -->
+  <section class="pro-hero">
+    <div class="ring-wrap">
+      <svg class="score-ring" viewBox="0 0 160 160" width="160" height="160">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#4ade80"/>
+            <stop offset="100%" stop-color="#22d3ee"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="80" cy="80" r="68"/>
+        <circle class="ring-fg" id="ringFg" cx="80" cy="80" r="68"/>
+      </svg>
+      <div class="ring-inner">
+        <span class="ring-score" id="ringScore">—</span>
+        <span class="ring-label">AVG SCORE</span>
+      </div>
+    </div>
+
+    <div class="hero-metrics">
+      <div class="hm-item">
+        <span class="hm-val" id="hmSessions">—</span>
+        <span class="hm-key">Sessions</span>
+      </div>
+      <div class="hm-divider"></div>
+      <div class="hm-item">
+        <span class="hm-val" id="hmMinutes">—</span>
+        <span class="hm-key">Minutes</span>
+      </div>
+      <div class="hm-divider"></div>
+      <div class="hm-item">
+        <span class="hm-val" id="hmStreak">—</span>
+        <span class="hm-key">Day Streak 🔥</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STREAK CARD ───────────────────────────────────────────────────── -->
+  <div class="streak-card hidden" id="streakCard">
+    <div class="streak-left">
+      <div class="streak-fire" id="streakFire">🔥</div>
+      <div class="streak-info">
+        <span class="streak-count" id="streakCount">0</span>
+        <span class="streak-label">day streak</span>
+      </div>
+    </div>
+    <div class="streak-right">
+      <div class="streak-best" id="streakBest">Best: 0 days</div>
+      <div class="streak-risk hidden" id="streakRisk">Practice today to keep your streak!</div>
+    </div>
+  </div>
+
+  <!-- ── ZONE 3: CONTENT ────────────────────────────────────────────────── -->
+  <section class="pro-content">
+
+    <!-- Left: Score Trend -->
+    <div class="pro-card">
+      <div class="card-head">
+        <span class="card-title">Progress</span>
+        <span class="card-sub" id="trendSub">Last 10 sessions</span>
+      </div>
+      <div class="chart-wrap" id="chartWrap">
+        <canvas id="trendChart"></canvas>
+        <div class="chart-empty hidden" id="chartEmpty">
+          Complete more sessions to see your progress
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Recent Sessions -->
+    <div class="pro-card">
+      <div class="card-head">
+        <span class="card-title">Recent</span>
+      </div>
+      <ul class="sessions-list" id="sessionsList">
+        <li class="sl-empty">No sessions yet</li>
+      </ul>
+    </div>
+
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+</body>
+</html>

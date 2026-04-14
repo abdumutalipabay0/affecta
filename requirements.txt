@@ -1,0 +1,15 @@
+# macOS Apple Silicon — install in this exact order:
+#   pip install tensorflow-macos tensorflow-metal
+#   pip install -r requirements.txt
+
+Flask>=3.0.0
+tensorflow-macos>=2.16.0; sys_platform == "darwin" and platform_machine == "arm64"
+tensorflow-metal>=1.1.0;  sys_platform == "darwin" and platform_machine == "arm64"
+tensorflow>=2.16.0;       sys_platform != "darwin"
+deepface>=0.0.93
+opencv-python>=4.9.0
+numpy>=1.26.0
+pandas>=2.2.0
+groq>=0.4.0
+supabase>=2.0.0
+python-dotenv>=1.0.0
