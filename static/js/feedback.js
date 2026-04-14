@@ -56,6 +56,14 @@ async function init() {
     }
   }
 
+  // Normalise JSONB array fields — DB may return null for older rows;
+  // localStorage may omit fields entirely. Both are safe after this.
+  if (sessionData) {
+    sessionData.words          = Array.isArray(sessionData.words)          ? sessionData.words          : [];
+    sessionData.emotion_timeline = Array.isArray(sessionData.emotion_timeline) ? sessionData.emotion_timeline : [];
+    sessionData.filler_words   = Array.isArray(sessionData.filler_words)   ? sessionData.filler_words   : [];
+  }
+
   console.log('Session data:', sessionData);
 
   document.getElementById('loadingState').style.display = 'none';
@@ -566,14 +574,35 @@ async function saveSession(aiFeedback) {
     if (id) {
       history.replaceState({}, '', `/feedback?id=${id}`);
       localStorage.removeItem('affecta_session');
-      // Refresh score display with server-calculated value
+
+      // DB is now the single source of truth — fetch the full saved record
+      // and rebuild every replay component from server data.
       const sRes = await fetch(`/api/session/${id}`);
       if (sRes.ok) {
         const saved = await sRes.json();
+
+        // Normalise JSONB fields that may be null in older rows
+        saved.words            = Array.isArray(saved.words)            ? saved.words            : [];
+        saved.emotion_timeline = Array.isArray(saved.emotion_timeline) ? saved.emotion_timeline : [];
+        saved.filler_words     = Array.isArray(saved.filler_words)     ? saved.filler_words     : [];
+
+        // Replace in-memory session with authoritative server version
+        sessionData = saved;
+
+        // Update score ring with server-calculated value
         if (saved.overall_score != null) {
           animateScore(saved.overall_score);
           document.getElementById('scoreNum').textContent = saved.overall_score;
         }
+
+        // Rebuild replay components from DB data
+        renderSessionReplay(saved.emotion_timeline, saved.words);
+        renderHeatmap();
+        findWeakestMoment();
+
+        console.log('[save_session] UI rebuilt from server | words:', saved.words.length, '| emotions:', saved.emotion_timeline.length);
+      } else {
+        console.warn('[save_session] failed to fetch saved session — replay stays on local data');
       }
     }
   } catch (err) {

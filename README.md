@@ -136,4 +136,4 @@ overall_score = clamp(0, 100, confidence_avg − min(filler_count × 3, 30) + mi
 
 ## License
 
-MIT
+Tony Stark approved
