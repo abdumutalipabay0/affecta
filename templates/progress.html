@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/progress.css') }}">
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav class="pg-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">A</div>
+    <span>Affecta</span>
+  </a>
+  <div class="nav-links">
+    <a href="/coach" class="nav-link">Coach</a>
+    <a href="/history" class="nav-link">History</a>
+    <a href="/progress" class="nav-link active">Progress</a>
+    <a href="/profile" class="nav-link">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
+
+<div class="pg-wrap">
+
+  <!-- ── HERO GOAL BAR ──────────────────────────────────────────────────── -->
+  <div class="pg-hero glass" id="pgHero" style="display:none">
+    <div class="hero-left">
+      <div class="hero-label">YOUR GOAL</div>
+      <div class="hero-bands" id="heroBands">— → —</div>
+      <div class="hero-sub" id="heroSub">Loading…</div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-progress-wrap">
+        <div class="hero-progress-bar">
+          <div class="hero-progress-fill" id="heroProgressFill"></div>
+        </div>
+        <div class="hero-progress-labels">
+          <span id="heroProgressLabel">0%</span>
+          <span id="heroProgressDays"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2×2 SKILLS GRID ────────────────────────────────────────────────── -->
+  <div class="pg-section-title">Skill Scores</div>
+  <div class="skills-grid" id="skillsGrid">
+    <div class="skill-card glass skeleton-card" id="skillFluency">
+      <div class="skill-header">
+        <span class="skill-icon">🗣️</span>
+        <span class="skill-name">Fluency</span>
+        <span class="skill-trend" id="trendFluency"></span>
+      </div>
+      <div class="skill-ring-wrap">
+        <svg class="skill-ring" viewBox="0 0 80 80">
+          <circle class="skill-ring-bg" cx="40" cy="40" r="32"/>
+          <circle class="skill-ring-fg" id="ringFluency" cx="40" cy="40" r="32"/>
+        </svg>
+        <div class="skill-ring-val" id="valFluency">—</div>
+      </div>
+      <div class="skill-desc">Avg. confidence</div>
+    </div>
+
+    <div class="skill-card glass skeleton-card" id="skillVocabulary">
+      <div class="skill-header">
+        <span class="skill-icon">📚</span>
+        <span class="skill-name">Vocabulary</span>
+        <span class="skill-trend" id="trendVocabulary"></span>
+      </div>
+      <div class="skill-ring-wrap">
+        <svg class="skill-ring" viewBox="0 0 80 80">
+          <circle class="skill-ring-bg" cx="40" cy="40" r="32"/>
+          <circle class="skill-ring-fg" id="ringVocabulary" cx="40" cy="40" r="32"/>
+        </svg>
+        <div class="skill-ring-val" id="valVocabulary">—</div>
+      </div>
+      <div class="skill-desc">Filler word ratio</div>
+    </div>
+
+    <div class="skill-card glass skeleton-card" id="skillConfidence">
+      <div class="skill-header">
+        <span class="skill-icon">💪</span>
+        <span class="skill-name">Confidence</span>
+        <span class="skill-trend" id="trendConfidence"></span>
+      </div>
+      <div class="skill-ring-wrap">
+        <svg class="skill-ring" viewBox="0 0 80 80">
+          <circle class="skill-ring-bg" cx="40" cy="40" r="32"/>
+          <circle class="skill-ring-fg" id="ringConfidence" cx="40" cy="40" r="32"/>
+        </svg>
+        <div class="skill-ring-val" id="valConfidence">—</div>
+      </div>
+      <div class="skill-desc">Avg. overall score</div>
+    </div>
+
+    <div class="skill-card glass skeleton-card" id="skillConsistency">
+      <div class="skill-header">
+        <span class="skill-icon">🔥</span>
+        <span class="skill-name">Consistency</span>
+        <span class="skill-trend" id="trendConsistency"></span>
+      </div>
+      <div class="skill-ring-wrap">
+        <svg class="skill-ring" viewBox="0 0 80 80">
+          <circle class="skill-ring-bg" cx="40" cy="40" r="32"/>
+          <circle class="skill-ring-fg" id="ringConsistency" cx="40" cy="40" r="32"/>
+        </svg>
+        <div class="skill-ring-val" id="valConsistency">—</div>
+      </div>
+      <div class="skill-desc">Day streak × 10</div>
+    </div>
+  </div>
+
+  <!-- ── TWO-COLUMN CONTENT ─────────────────────────────────────────────── -->
+  <div class="pg-two-col">
+
+    <!-- Left: Score Trend Chart -->
+    <div class="pg-card glass">
+      <div class="pg-card-head">
+        <span class="pg-card-title">Score Trend</span>
+        <span class="pg-card-sub" id="improvementBadge"></span>
+      </div>
+      <div class="pg-chart-wrap">
+        <canvas id="trendChart" height="160"></canvas>
+        <div class="pg-empty hidden" id="trendEmpty">Complete more sessions to see your score trend</div>
+      </div>
+    </div>
+
+    <!-- Right: Weekly Activity -->
+    <div class="pg-card glass">
+      <div class="pg-card-head">
+        <span class="pg-card-title">This Week</span>
+        <span class="pg-card-sub" id="weekTotal"></span>
+      </div>
+      <div class="activity-grid" id="activityGrid">
+        <!-- filled by JS -->
+      </div>
+      <div class="activity-legend">
+        <span class="al-label">Less</span>
+        <div class="al-swatch al-s0"></div>
+        <div class="al-swatch al-s1"></div>
+        <div class="al-swatch al-s2"></div>
+        <div class="al-swatch al-s3"></div>
+        <span class="al-label">More</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── MODE BREAKDOWN ─────────────────────────────────────────────────── -->
+  <div class="pg-section-title">Practice Breakdown</div>
+  <div class="mode-breakdown" id="modeBreakdown">
+    <!-- filled by JS -->
+  </div>
+
+</div><!-- /pg-wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+</body>
+</html>

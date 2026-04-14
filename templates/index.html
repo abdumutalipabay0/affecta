@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Affecta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Header ───────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">A</div>
+      <div>
+        <div class="logo-name">Affecta</div>
+        <div class="logo-tag">Emotion Intelligence</div>
+      </div>
+    </div>
+    <div class="server-status">
+      <div id="statusDot" class="status-dot loading"></div>
+      <span id="statusLabel">Initialising…</span>
+    </div>
+  </header>
+
+  <!-- ── Main: camera + timeline ──────────────────────────────────────────── -->
+  <main>
+
+    <!-- Left: live camera feed -->
+    <section class="panel camera-panel glass">
+      <div class="panel-title">Live Camera</div>
+
+      <div class="video-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+
+        <!-- Shown while TF models load -->
+        <div id="loadingOverlay" class="loading-overlay">
+          <div class="spinner"></div>
+          <p>Loading DeepFace models…</p>
+        </div>
+      </div>
+
+      <!-- Emotion info strip -->
+      <div class="emotion-info">
+        <div class="emotion-display">
+          <span id="emotionEmoji">😐</span>
+          <div class="emotion-text">
+            <div id="emotionName" style="color:#e2e8f0">NEUTRAL</div>
+            <div class="conf-row">
+              <div class="conf-track">
+                <div id="confFill" class="conf-fill" style="background:#e2e8f0"></div>
+              </div>
+              <span id="confValue">0.0%</span>
+            </div>
+          </div>
+        </div>
+        <span id="lowConfBadge" class="low-conf-badge">LOW CONF</span>
+      </div>
+    </section>
+
+    <!-- Right: live timeline -->
+    <section class="panel timeline-panel glass">
+      <div class="panel-title">Live Timeline</div>
+      <div class="chart-wrap">
+        <canvas id="timelineChart"></canvas>
+      </div>
+      <div id="timelineLegend" class="legend"></div>
+    </section>
+
+  </main>
+
+  <!-- ── Control bar ──────────────────────────────────────────────────────── -->
+  <div class="control-bar glass">
+    <div class="session-indicator">
+      <div id="recDot" class="rec-dot"></div>
+      <span id="sessionStatus">Ready — press Start to begin</span>
+    </div>
+    <div class="controls">
+      <button id="startBtn" class="btn btn-primary">Start Session</button>
+      <div id="sessionTime">00:00</div>
+      <div id="sampleCount">0 samples</div>
+      <button id="stopBtn" class="btn btn-danger" disabled>Stop Session</button>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<!-- ── Statistics modal ────────────────────────────────────────────────────── -->
+<div id="statsModal" class="modal-overlay">
+  <div class="modal glass">
+
+    <div class="modal-header">
+      <h2>Session Complete</h2>
+      <button id="closeStats" class="btn-icon" aria-label="Close">✕</button>
+    </div>
+
+    <div class="stats-cards">
+
+      <!-- Dominant emotion -->
+      <div class="stat-card glass">
+        <div id="statDomEmoji" class="dom-emoji"></div>
+        <div class="stat-lbl">Dominant emotion</div>
+        <div id="statDomName" class="dom-name"></div>
+        <div id="statDomPct"  class="dom-pct"></div>
+      </div>
+
+      <!-- Duration -->
+      <div class="stat-card glass">
+        <div class="stat-lbl">Duration</div>
+        <div id="statDuration" class="stat-val"></div>
+        <div class="stat-sub">mm:ss</div>
+      </div>
+
+      <!-- Samples -->
+      <div class="stat-card glass">
+        <div class="stat-lbl">Total samples</div>
+        <div id="statSamples" class="stat-val"></div>
+        <div class="stat-sub">emotion readings</div>
+      </div>
+
+    </div>
+
+    <!-- Doughnut + legend -->
+    <div class="pie-section">
+      <div class="pie-wrap">
+        <canvas id="pieChart"></canvas>
+      </div>
+      <div id="pieLegend" class="pie-legend"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

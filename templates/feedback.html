@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav class="fb-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">A</div>
+    <span>Affecta</span>
+  </a>
+  <div class="nav-links">
+    <a href="/coach" class="nav-link">Coach</a>
+    <a href="/history" class="nav-link">History</a>
+    <a href="/progress" class="nav-link">Progress</a>
+    <a href="/profile" class="nav-link">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
+
+<div class="fb-wrap">
+<div class="fb-content" id="fbContent">
+
+  <!-- Shown while loading -->
+  <div id="loadingState" class="fb-skeleton">
+    <div class="spinner"></div>
+    <p>Loading your session…</p>
+  </div>
+
+  <!-- Shown when no session data -->
+  <div id="noSessionState" class="no-session" style="display:none">
+    <h2>No session data</h2>
+    <p>Start a session in Coach to see your feedback here.</p>
+    <a href="/coach" class="btn-primary" style="display:inline-block;text-decoration:none">Go to Coach</a>
+  </div>
+
+  <!-- Main feedback content (hidden until data loads) -->
+  <div id="mainContent" style="display:none">
+
+    <!-- ── HERO METRICS ──────────────────────────────────────────────────── -->
+    <div class="hero-metrics glass">
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--accent)"/>
+            <stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div class="metrics-top">
+        <div>
+          <div class="session-title" id="sessionTitle">Session Feedback</div>
+          <div class="session-meta">
+            <span class="mode-tag" id="modeTag">IELTS</span>
+            <span class="date-tag" id="dateTag"></span>
+          </div>
+        </div>
+        <div class="fb-actions" id="topActions">
+          <button class="btn-secondary" onclick="window.location.href='/coach'">New Session</button>
+          <button class="btn-secondary" onclick="window.location.href='/history'">History</button>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+
+        <!-- Score ring -->
+        <div class="metric-card">
+          <div class="score-ring-wrap">
+            <div class="score-ring">
+              <svg viewBox="0 0 80 80" width="80" height="80">
+                <defs>
+                  <linearGradient id="scoreGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="var(--accent)"/>
+                    <stop offset="100%" stop-color="#a78bfa"/>
+                  </linearGradient>
+                </defs>
+                <circle class="score-track" cx="40" cy="40" r="35"/>
+                <circle class="score-arc" id="scoreArc" cx="40" cy="40" r="35"/>
+              </svg>
+              <div class="score-center">
+                <div class="score-num" id="scoreNum">—</div>
+                <div class="score-max">/ 100</div>
+              </div>
+            </div>
+          </div>
+          <div class="metric-lbl" style="text-align:center;margin-top:8px">Overall Score</div>
+        </div>
+
+        <!-- Duration -->
+        <div class="metric-card" style="text-align:center">
+          <div class="metric-val" id="metricDuration">—</div>
+          <div class="metric-lbl">Duration</div>
+        </div>
+
+        <!-- Fillers -->
+        <div class="metric-card" style="text-align:center">
+          <div class="metric-val" id="metricFillers">—</div>
+          <div class="metric-lbl">Filler Words</div>
+        </div>
+
+        <!-- Confidence -->
+        <div class="metric-card" style="text-align:center">
+          <div class="metric-val" id="metricConfidence">—</div>
+          <div class="metric-lbl">Avg. Confidence</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SESSION REPLAY ────────────────────────────────────────────────── -->
+    <div class="replay-section glass" id="replaySection" style="display:none">
+      <div class="section-title">Session Replay</div>
+      <div class="replay-track" id="replayTrack"></div>
+      <div class="replay-legend" id="replayLegend"></div>
+    </div>
+
+    <!-- ── BODY ──────────────────────────────────────────────────────────── -->
+    <div class="fb-body">
+
+      <!-- Left column -->
+      <div class="fb-main">
+
+        <!-- Transcript Heatmap -->
+        <div class="section-card glass" id="heatmapSection">
+          <div class="section-title">Transcript</div>
+          <div class="heatmap-wrap" id="heatmapWrap">
+            <span style="color:#52525b;font-size:14px">Transcribing…</span>
+          </div>
+          <div class="heatmap-legend" id="heatmapLegend"></div>
+        </div>
+
+        <!-- AI Feedback -->
+        <div class="section-card glass">
+          <div class="section-title">AI Coach Feedback</div>
+          <div class="ai-feedback-area">
+            <div class="ai-loading" id="aiLoading">
+              <div class="dot-pulse">
+                <span></span><span></span><span></span>
+              </div>
+              <span>Generating feedback…</span>
+            </div>
+            <div class="feedback-content" id="feedbackContent"></div>
+            <span class="feedback-cursor hidden" id="feedbackCursor"></span>
+          </div>
+        </div>
+
+        <!-- Vocabulary Analysis -->
+        <div class="section-card glass" id="vocabSection" style="display:none">
+          <div class="section-title">Vocabulary Analysis</div>
+          <div class="vocab-body">
+            <div class="vocab-col">
+              <div class="vocab-sub-title">Filler Words</div>
+              <div id="fillerBadges"></div>
+            </div>
+            <div class="vocab-col">
+              <div class="vocab-sub-title">IELTS Vocabulary Suggestions</div>
+              <div class="ai-loading" id="vocabLoading">
+                <div class="dot-pulse"><span></span><span></span><span></span></div>
+                <span>Analyzing vocabulary…</span>
+              </div>
+              <div class="feedback-content" id="vocabContent"></div>
+              <span class="feedback-cursor hidden" id="vocabCursor"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right sidebar -->
+      <div class="sidebar" id="sidebar">
+
+        <!-- Weakest moment -->
+        <div class="section-card glass weakest-card" id="weakestCard" style="display:none">
+          <div class="weakest-header">
+            <span class="weakest-icon">⚠️</span>
+            <span class="weakest-title">Weakest Moment</span>
+          </div>
+          <div class="weakest-time" id="weakestTime"></div>
+          <div class="weakest-quote" id="weakestQuote"></div>
+          <div class="weakest-emotion" id="weakestEmotion"></div>
+        </div>
+
+        <!-- Confidence timeline chart -->
+        <div class="chart-card glass">
+          <div class="chart-title">Confidence Timeline</div>
+          <div class="chart-wrap">
+            <canvas id="confChart" height="140"></canvas>
+          </div>
+        </div>
+
+        <!-- Emotion distribution donut -->
+        <div class="chart-card glass">
+          <div class="chart-title">Emotion Distribution</div>
+          <div class="chart-wrap">
+            <canvas id="emoChart" height="200"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /fb-body -->
+
+  </div><!-- /mainContent -->
+
+</div><!-- /fb-content -->
+</div><!-- /fb-wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+</body>
+</html>

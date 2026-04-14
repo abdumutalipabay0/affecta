@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Affecta — Signing in…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #080808;
+      color: #f0f0f0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 20px;
+      text-align: center; padding: 24px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 8px;
+    }
+    .logo-mark {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, #3b6bff 0%, #7c3aed 100%);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: #fff;
+    }
+    .logo-name {
+      font-size: 22px; font-weight: 800; letter-spacing: -.5px;
+      background: linear-gradient(135deg, #fff 30%, #aaa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ring {
+      width: 52px; height: 52px;
+      border: 3px solid rgba(255,255,255,.08);
+      border-top-color: #3b6bff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status { font-size: 16px; font-weight: 600; color: #ccc; }
+    .sub    { font-size: 13px; color: #666; margin-top: 4px; }
+    .err-box {
+      display: none;
+      background: rgba(255,79,79,.1);
+      border: 1px solid rgba(255,79,79,.3);
+      border-radius: 12px;
+      padding: 16px 20px; max-width: 340px;
+      font-size: 13px; color: #ff7070; line-height: 1.5;
+    }
+    .err-box a { color: #ff9a9a; }
+  </style>
+</head>
+<body>
+
+  <div class="logo">
+    <div class="logo-mark">A</div>
+    <span class="logo-name">Affecta</span>
+  </div>
+
+  <div class="ring" id="ring"></div>
+  <div class="status" id="status">Completing sign-in…</div>
+  <div class="sub"   id="sub">Please wait a moment</div>
+  <div class="err-box" id="errBox"></div>
+
+  <script>
+    function setStatus(msg, sub) {
+      document.getElementById('status').textContent = msg;
+      if (sub !== undefined) document.getElementById('sub').textContent = sub || '';
+    }
+
+    function showError(msg) {
+      document.getElementById('ring').style.display   = 'none';
+      document.getElementById('errBox').style.display = 'block';
+      document.getElementById('errBox').innerHTML = msg + '<br><br><a href="/auth">← Back to sign in</a>';
+      setStatus('Something went wrong', '');
+    }
+
+    async function handleCallback() {
+      // Supabase PKCE flow: code arrives as ?code= query param
+      const code = new URLSearchParams(window.location.search).get('code');
+
+      if (!code) {
+        // Implicit flow fallback: tokens in URL hash fragment
+        const hash   = window.location.hash.slice(1);
+        const params = new URLSearchParams(hash);
+        const error  = params.get('error');
+        if (error) {
+          showError('Authentication error: <strong>' + error + '</strong><br>' + (params.get('error_description') || ''));
+          return;
+        }
+        const access_token  = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        if (access_token) {
+          setStatus('Verifying credentials…', '');
+          try {
+            const res  = await fetch('/auth/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ access_token, refresh_token })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) throw new Error(data.error || 'Session error');
+            setStatus('Signed in!', 'Redirecting…');
+            setTimeout(() => { window.location.href = '/coach'; }, 400);
+          } catch (err) { showError(err.message); }
+          return;
+        }
+        showError('No authentication code found. The link may have expired.');
+        return;
+      }
+
+      // Exchange code → session on the server
+      setStatus('Exchanging auth code…', '');
+      try {
+        const res  = await fetch('/auth/exchange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Exchange failed');
+        setStatus('Signed in!', 'Redirecting to dashboard…');
+        setTimeout(() => { window.location.href = data.redirect || '/coach'; }, 400);
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    handleCallback();
+  </script>
+</body>
+</html>

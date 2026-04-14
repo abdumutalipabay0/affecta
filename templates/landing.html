@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — AI Speaking Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:#080808;color:#fff;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* Grain */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity:0.028}
+
+/* Center glow */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 20%,rgba(37,99,235,0.04) 0%,transparent 100%)}
+
+.container{width:100%;max-width:1160px;margin:0 auto;padding:0 clamp(20px,4vw,40px);position:relative;z-index:1}
+
+/* ── NAVBAR ─────────────────────────────────────────────────────────────── */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 5%;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid transparent;
+  transition:background 0.35s cubic-bezier(0.4,0,0.2,1),border-color 0.35s cubic-bezier(0.4,0,0.2,1)}
+.navbar.scrolled{background:rgba(8,8,8,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:rgba(255,255,255,0.08)}
+
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.02em;flex-shrink:0}
+
+.nav-pill{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  border-radius:100px;padding:5px;backdrop-filter:blur(8px);gap:2px}
+.nav-pill a{padding:7px 18px;font-size:13px;font-weight:500;color:#71717a;border-radius:100px;
+  transition:color 0.35s cubic-bezier(0.4,0,0.2,1),background 0.35s cubic-bezier(0.4,0,0.2,1)}
+@media(hover:hover){.nav-pill a:hover{color:#fff;background:rgba(255,255,255,0.07)}}
+
+.nav-cta{padding:9px 22px;background:#fff;color:#080808;font-size:13px;font-weight:700;border-radius:8px;
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.35s cubic-bezier(0.4,0,0.2,1);flex-shrink:0}
+@media(hover:hover){.nav-cta:hover{transform:scale(1.02);opacity:0.9}}
+
+/* ── HERO ───────────────────────────────────────────────────────────────── */
+.hero{padding:clamp(120px,14vw,180px) 0 clamp(60px,8vw,120px);position:relative;z-index:1}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,80px);align-items:center}
+
+.hero-badge{display:inline-flex;align-items:center;gap:10px;
+  border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);
+  border-radius:100px;padding:7px 16px 7px 10px;
+  font-size:12px;font-weight:600;color:#60a5fa;letter-spacing:0.05em;text-transform:uppercase;
+  margin-bottom:clamp(20px,2.5vw,32px)}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:#3b82f6;animation:badgepulse 2s ease infinite}
+@keyframes badgepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+.hero-title{font-size:clamp(40px,7vw,96px);font-weight:900;line-height:0.95;letter-spacing:-0.03em;
+  color:#fff;margin-bottom:18px}
+
+/* Line 2 wrapper — fixed height prevents cursor from causing layout shift */
+.hero-title-line2{
+  display:block;
+  min-height:1.05em;
+  overflow:visible;
+  position:relative;
+}
+
+.word-cycle{
+  display:inline-block;
+  position:relative;
+  color:#3b82f6;
+  /* reserve right space for cursor so it never wraps */
+  padding-right:14px;
+}
+
+/* Cursor as ::after — absolutely positioned, never affects text flow */
+.word-cycle::after{
+  content:'|';
+  position:absolute;
+  right:0;
+  top:0;
+  color:#3b82f6;
+  font-weight:200;
+  animation:twblink 0.8s ease infinite;
+  pointer-events:none;
+}
+
+/* Remove old tw-cursor span style (now handled by ::after) */
+.tw-cursor{display:none}
+
+.hero-accent-line{width:120px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,#3b82f6,transparent);margin:20px 0 clamp(16px,2vw,28px)}
+
+.hero-sub{font-size:clamp(14px,1.4vw,17px);color:#94a3b8;max-width:440px;line-height:1.75;margin-bottom:clamp(24px,3vw,36px)}
+
+.hero-actions{display:flex;align-items:center;gap:clamp(10px,1.5vw,16px);flex-wrap:wrap;margin-bottom:clamp(24px,3vw,32px)}
+
+.btn-white{display:inline-flex;align-items:center;
+  padding:clamp(10px,1.2vw,14px) clamp(18px,2vw,26px);
+  background:#fff;color:#080808;font-size:clamp(13px,1.2vw,15px);font-weight:700;
+  border-radius:8px;font-family:inherit;
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1),opacity 0.35s cubic-bezier(0.4,0,0.2,1)}
+@media(hover:hover){.btn-white:hover{transform:translateY(-2px);opacity:0.88}}
+
+.btn-ghost{display:inline-flex;align-items:center;
+  padding:clamp(10px,1.2vw,14px) clamp(18px,2vw,26px);
+  background:transparent;color:#fff;font-size:clamp(13px,1.2vw,15px);font-weight:600;
+  border-radius:8px;border:1px solid rgba(255,255,255,0.15);font-family:inherit;
+  transition:border-color 0.35s cubic-bezier(0.4,0,0.2,1),background 0.35s cubic-bezier(0.4,0,0.2,1)}
+@media(hover:hover){.btn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.04)}}
+
+.hero-checks{display:flex;align-items:center;gap:clamp(14px,2vw,24px);flex-wrap:wrap}
+.hero-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b}
+.check-circle{width:20px;height:20px;border-radius:50%;background:rgba(59,130,246,0.15);
+  border:1px solid rgba(59,130,246,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── MOCKUP ─────────────────────────────────────────────────────────────── */
+.mockup-wrap{position:relative}
+
+/* Cinematic glow beneath card */
+.mockup-wrap::after{content:'';position:absolute;bottom:-30px;left:10%;right:10%;height:60px;
+  background:radial-gradient(ellipse 80% 40% at 50% 100%,rgba(59,130,246,0.18),transparent);
+  filter:blur(20px);pointer-events:none;z-index:0}
+
+.mockup-card{position:relative;z-index:1;background:#111;border-radius:20px;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.06);
+  transform-style:preserve-3d;
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)}
+
+.mock-header{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.07);background:#111}
+.mock-dots{display:flex;gap:6px;align-items:center}
+.mock-dot{width:10px;height:10px;border-radius:50%}
+.mock-dot:nth-child(1){background:#ff5f57}
+.mock-dot:nth-child(2){background:#febc2e}
+.mock-dot:nth-child(3){background:#28c840}
+.mock-title{font-size:12px;font-weight:600;color:#4b5563;letter-spacing:0.03em}
+.mock-rec{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#ef4444;letter-spacing:0.06em}
+.mock-rec-dot{width:6px;height:6px;border-radius:50%;background:#ef4444;animation:recdot 1s ease infinite}
+@keyframes recdot{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.mock-photo-wrap{position:relative;aspect-ratio:4/3;background:#000;overflow:hidden}
+.mock-photo-wrap img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;border-radius:0;
+  transition:opacity 0.6s ease;opacity:0}
+
+/* ── Emotion panel ───────────────────────────────────────────────────────── */
+.mock-overlay-panel{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:14px 16px 12px;
+  background:linear-gradient(135deg,rgba(0,0,0,0.9) 0%,rgba(15,15,30,0.95) 100%);
+  backdrop-filter:blur(20px) saturate(200%);
+  display:flex;flex-direction:column;gap:10px;
+  /* Subtle scanline overlay */
+  background-image:
+    linear-gradient(135deg,rgba(0,0,0,0.9) 0%,rgba(15,15,30,0.95) 100%),
+    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.012) 2px,rgba(255,255,255,0.012) 4px);
+}
+
+/* Three-zone row */
+.mock-emo-row{display:flex;align-items:center;gap:12px}
+
+/* Left — pulsing dot ring */
+.mock-emo-ring{
+  width:36px;height:36px;border-radius:50%;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.04);
+  border:2px solid var(--emo-col,#4ade80);
+  box-shadow:0 0 10px var(--emo-col,#4ade80);
+  transition:border-color 0.5s ease,box-shadow 0.5s ease;
+}
+.mock-emo-dot{
+  width:12px;height:12px;border-radius:50%;
+  background:var(--emo-col,#4ade80);
+  box-shadow:0 0 6px var(--emo-col,#4ade80);
+  animation:emopulse 2s ease infinite;
+  transition:background 0.5s ease,box-shadow 0.5s ease;
+}
+@keyframes emopulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:0.7}}
+
+/* Center */
+.mock-emo-center{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.mock-emo-label{
+  font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;
+  color:rgba(255,255,255,0.3)
+}
+.mock-emo-name{
+  font-size:18px;font-weight:700;color:#fff;
+  letter-spacing:-0.01em;line-height:1;
+}
+
+/* Right — confidence number */
+.mock-emo-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.mock-conf-big{
+  font-size:28px;font-weight:800;line-height:1;
+  background:linear-gradient(135deg,var(--emo-col,#4ade80),#fff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  transition:background 0.5s ease;
+}
+.mock-conf-tiny{font-size:9px;font-weight:600;color:rgba(255,255,255,0.3);
+  letter-spacing:0.1em;text-transform:uppercase}
+
+/* Bottom bar */
+.mock-conf-bar-wrap{height:2px;border-radius:1px;background:rgba(255,255,255,0.06);overflow:hidden}
+.mock-conf-fill{height:100%;border-radius:1px;
+  background:linear-gradient(90deg,var(--emo-col,#4ade80),#fff);
+  width:0%;transition:width 0.8s ease,background 0.5s ease}
+
+/* ── MARQUEE ────────────────────────────────────────────────────────────── */
+.marquee-section{border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:18px 0;overflow:hidden;position:relative;z-index:1;background:#080808}
+.marquee-track{display:flex;width:max-content;animation:marquee 30s linear infinite;white-space:nowrap;align-items:center}
+.marquee-track:hover{animation-play-state:paused}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.marquee-item{font-size:clamp(11px,1.3vw,13px);font-weight:500;color:#6b7280;
+  padding:0 22px;letter-spacing:0.08em;text-transform:uppercase;
+  transition:color 0.35s cubic-bezier(0.4,0,0.2,1);cursor:default}
+@media(hover:hover){.marquee-item:hover{color:#fff}}
+.marquee-diamond{color:#3b82f6;font-size:8px;flex-shrink:0}
+
+/* ── SECTIONS SHARED ────────────────────────────────────────────────────── */
+.section{padding:clamp(60px,8vw,120px) 0;position:relative;z-index:1}
+.sec-eyebrow{font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;
+  color:#52525b;margin-bottom:14px}
+.sec-title{font-size:clamp(32px,4vw,60px);font-weight:900;line-height:1;
+  letter-spacing:-0.03em;color:#fff;margin-bottom:clamp(32px,4vw,52px)}
+
+/* ── MODES ──────────────────────────────────────────────────────────────── */
+.modes-list{display:flex;flex-direction:column;gap:0;
+  border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden}
+
+.mode-item{border-bottom:1px solid rgba(255,255,255,0.08);
+  transition:background 0.35s cubic-bezier(0.4,0,0.2,1)}
+.mode-item:last-child{border-bottom:none}
+.mode-item.open{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.18)}
+.mode-item.open+.mode-item{border-top:none}
+
+.mode-trigger{display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:72px;cursor:pointer;user-select:none;gap:20px}
+.mode-left{display:flex;align-items:center;gap:clamp(14px,2vw,24px)}
+.mode-num{font-size:12px;font-weight:700;color:#3f3f46;font-variant-numeric:tabular-nums;
+  letter-spacing:0.04em;width:22px;flex-shrink:0}
+.mode-name{font-size:clamp(15px,1.5vw,17px);font-weight:700;color:#fff;letter-spacing:-0.01em}
+.mode-tag{font-size:11px;color:#52525b;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:3px 9px;
+  display:none}
+@media(min-width:640px){.mode-tag{display:block}}
+
+.mode-chevron{color:#3f3f46;flex-shrink:0;transition:transform 0.35s cubic-bezier(0.4,0,0.2,1),color 0.35s cubic-bezier(0.4,0,0.2,1)}
+.mode-item.open .mode-chevron{transform:rotate(180deg);color:#a1a1aa}
+
+.mode-body{max-height:0;overflow:hidden;transition:max-height 0.45s cubic-bezier(0,1,0,1)}
+.mode-item.open .mode-body{max-height:320px;transition:max-height 0.5s ease}
+
+.mode-body-inner{padding:4px 28px 28px clamp(28px,4vw,72px);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+
+.mode-features{display:flex;flex-direction:column;gap:10px;list-style:none}
+.mode-feat{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#71717a;line-height:1.5}
+.feat-icon{flex-shrink:0;margin-top:2px;color:#52525b}
+
+.mode-cta-btn{display:inline-flex;align-items:center;white-space:nowrap;
+  padding:10px 22px;background:#fff;color:#080808;font-size:13px;font-weight:700;
+  border-radius:8px;font-family:inherit;flex-shrink:0;
+  transition:opacity 0.35s cubic-bezier(0.4,0,0.2,1)}
+@media(hover:hover){.mode-cta-btn:hover{opacity:0.85}}
+
+/* ── HOW IT WORKS ───────────────────────────────────────────────────────── */
+.howitworks{border-top:1px solid rgba(255,255,255,0.06)}
+
+.hiw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,4vw,56px);
+  position:relative}
+.hiw-grid::before{content:'';position:absolute;top:clamp(24px,3vw,36px);
+  left:calc(100%/6);right:calc(100%/6);height:1px;
+  border-top:1px dashed rgba(255,255,255,0.1);pointer-events:none}
+
+.hiw-step{display:flex;flex-direction:column;gap:16px}
+.hiw-num{font-size:clamp(48px,5vw,72px);font-weight:900;line-height:1;
+  letter-spacing:-0.04em;color:rgba(255,255,255,0.1)}
+.hiw-icon{width:48px;height:48px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;color:#94a3b8}
+.hiw-title{font-size:clamp(15px,1.6vw,19px);font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.2}
+.hiw-desc{font-size:clamp(13px,1.3vw,15px);color:#52525b;line-height:1.75}
+.hiw-pill{display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:#52525b;border:1px solid rgba(255,255,255,0.08);
+  border-radius:100px;padding:4px 12px}
+
+/* ── TESTIMONIALS ───────────────────────────────────────────────────────── */
+.testimonials{border-top:1px solid rgba(255,255,255,0.06)}
+
+.reviews-scroll{display:flex;gap:clamp(12px,1.5vw,20px);overflow-x:auto;padding-bottom:8px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.reviews-scroll::-webkit-scrollbar{display:none}
+
+.review-card{flex-shrink:0;width:clamp(260px,35vw,320px);
+  padding:clamp(20px,2vw,28px);background:#111;
+  border:1px solid rgba(255,255,255,0.08);border-radius:16px;
+  display:flex;flex-direction:column;gap:16px}
+.review-card.c1{border-top:2px solid #3b82f6}
+.review-card.c2{border-top:2px solid #6366f1}
+.review-card.c3{border-top:2px solid #10b981}
+.review-card.c4{border-top:2px solid #f59e0b}
+
+.review-stars{display:flex;gap:3px}
+.review-quote{font-size:clamp(13px,1.3vw,15px);color:#a1a1aa;line-height:1.75;flex:1}
+.review-footer{display:flex;align-items:center;gap:12px;
+  padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)}
+.review-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:#fff;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.review-name{font-size:13px;font-weight:700;color:#e4e4e7}
+.review-city{font-size:12px;color:#52525b;margin-top:1px}
+
+/* ── CTA ────────────────────────────────────────────────────────────────── */
+.cta-section{padding:0 0 clamp(60px,8vw,120px)}
+
+.cta-box{position:relative;border:1px solid rgba(255,255,255,0.1);
+  border-radius:clamp(16px,2vw,28px);padding:clamp(48px,6vw,80px);text-align:center;
+  background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(59,130,246,0.06) 0%,transparent 100%);
+  overflow:hidden}
+
+.cta-corner{position:absolute;width:6px;height:6px;background:#3b82f6;border-radius:1px}
+.cta-corner.tl{top:16px;left:16px}
+.cta-corner.tr{top:16px;right:16px}
+.cta-corner.bl{bottom:16px;left:16px}
+.cta-corner.br{bottom:16px;right:16px}
+
+.cta-title{font-size:clamp(36px,5vw,72px);font-weight:900;line-height:0.95;
+  letter-spacing:-0.04em;color:#fff;margin-bottom:18px}
+.cta-sub{font-size:clamp(14px,1.4vw,17px);color:#71717a;margin-bottom:clamp(24px,3vw,36px)}
+
+/* ── FOOTER ─────────────────────────────────────────────────────────────── */
+footer{border-top:1px solid rgba(255,255,255,0.08);position:relative;z-index:1;padding:clamp(24px,3vw,36px) 0 clamp(16px,2vw,24px)}
+.footer-main{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:clamp(16px,2vw,24px)}
+.footer-logo{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.02em}
+.footer-brand-tag{font-size:12px;color:#3f3f46;margin-top:3px}
+.footer-year{font-size:13px;color:#3f3f46}
+.footer-motto{text-align:center;font-style:italic;font-size:13px;color:#3f3f46;
+  padding-top:clamp(14px,2vw,20px);border-top:1px solid rgba(255,255,255,0.04)}
+
+/* ── HERO ENTRANCE ANIMATION ────────────────────────────────────────────── */
+.hero-anim{opacity:0;transform:translateY(24px)}
+.hero-anim.animate-in{opacity:1;transform:translateY(0);
+  transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1),transform 0.7s cubic-bezier(0.4,0,0.2,1)}
+.mockup-anim{opacity:0;transform:translateY(32px) scale(0.97)}
+.mockup-anim.animate-in{opacity:1;transform:translateY(0) scale(1);
+  transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1),transform 0.7s cubic-bezier(0.4,0,0.2,1)}
+
+/* ── TYPEWRITER CURSOR ───────────────────────────────────────────────────── */
+.tw-cursor{color:#3b82f6;font-weight:200;margin-left:1px;
+  animation:twblink 0.8s ease infinite}
+@keyframes twblink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* ── NAVBAR ACTIVE LINK ──────────────────────────────────────────────────── */
+.nav-pill a.nav-active{background:rgba(255,255,255,0.1);color:#fff}
+
+/* ── MODE CARD HOVER GLOW ────────────────────────────────────────────────── */
+.mode-item{transition:background 0.35s cubic-bezier(0.4,0,0.2,1),box-shadow 0.35s cubic-bezier(0.4,0,0.2,1)}
+@media(hover:hover){
+  .modes-list .mode-item:nth-child(1):hover{box-shadow:0 0 0 1px rgba(59,130,246,0.4),0 0 20px rgba(59,130,246,0.08)}
+  .modes-list .mode-item:nth-child(2):hover{box-shadow:0 0 0 1px rgba(99,102,241,0.4),0 0 20px rgba(99,102,241,0.08)}
+  .modes-list .mode-item:nth-child(3):hover{box-shadow:0 0 0 1px rgba(16,185,129,0.4),0 0 20px rgba(16,185,129,0.08)}
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
+@media(max-width:1024px){
+  .hiw-grid{grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,40px)}
+  .hiw-grid::before{display:none}
+}
+@media(max-width:768px){
+  .hero-grid{grid-template-columns:1fr}
+  .mockup-wrap{order:-1;max-width:460px;margin:0 auto;width:100%}
+  .nav-pill{display:none}
+  .hiw-grid{grid-template-columns:1fr}
+  .hiw-grid::before{display:none}
+  .mode-body-inner{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:480px){
+  .hero-actions{flex-direction:column;align-items:flex-start}
+  .hero-actions a{width:100%;justify-content:center}
+  .cta-box{padding:36px 20px}
+  .mode-trigger{padding:0 18px;gap:14px}
+  .mode-body-inner{padding-left:18px;padding-right:18px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-logo">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <rect x="2" y="9" width="4" height="13" rx="2" fill="#3b82f6"/>
+      <rect x="9" y="3" width="4" height="19" rx="2" fill="#6366f1"/>
+      <rect x="16" y="7" width="4" height="15" rx="2" fill="#3b82f6"/>
+    </svg>
+    Affecta
+  </div>
+  <div class="nav-pill">
+    <a href="#modes">Modes</a>
+    <a href="#howitworks">How it works</a>
+    <a href="#reviews">Reviews</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="/profile" style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:500;color:rgba(255,255,255,.5);text-decoration:none;padding:6px 10px;border-radius:8px;transition:color .15s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>
+      Profile
+    </a>
+    <a href="/coach" class="nav-cta">Start Practicing</a>
+  </div>
+</nav>
+
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="container hero-grid">
+
+    <!-- Left -->
+    <div>
+      <h1 class="hero-title">
+        <span class="hero-anim" id="ha-line1" style="display:block">Speak with</span>
+        <span class="hero-title-line2">
+          <span class="word-cycle hero-anim" id="wordCycle"><span id="twText">Confidence</span></span>
+        </span>
+      </h1>
+
+      <div class="hero-accent-line"></div>
+
+      <p class="hero-sub hero-anim" id="ha-sub">
+        Practice IELTS, interviews, and pitches. Get real-time emotion analysis
+        and AI coaching that actually helps you grow.
+      </p>
+
+      <div class="hero-actions hero-anim" id="ha-actions">
+        <a href="/coach" class="btn-white">Start Practicing →</a>
+        <a href="#howitworks" class="btn-ghost">See how it works</a>
+      </div>
+
+      <div class="hero-checks hero-anim" id="ha-checks">
+        <div class="hero-check">
+          <div class="check-circle">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,5 4,7 8,3"/></svg>
+          </div>
+          Free to use
+        </div>
+        <div class="hero-check">
+          <div class="check-circle">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,5 4,7 8,3"/></svg>
+          </div>
+          No signup
+        </div>
+        <div class="hero-check">
+          <div class="check-circle">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,5 4,7 8,3"/></svg>
+          </div>
+          Instant AI feedback
+        </div>
+      </div>
+    </div>
+
+    <!-- Right mockup -->
+    <div class="mockup-wrap mockup-anim" id="ha-mockup">
+      <div class="mockup-card">
+        <div class="mock-header">
+          <div class="mock-dots">
+            <div class="mock-dot"></div><div class="mock-dot"></div><div class="mock-dot"></div>
+          </div>
+          <span class="mock-title">Affecta Coach</span>
+          <div class="mock-rec"><div class="mock-rec-dot"></div> REC</div>
+        </div>
+        <div class="mock-photo-wrap">
+          <img id="mockPhoto" src="" alt="speaker">
+          <div class="mock-overlay-panel">
+            <div class="mock-emo-row">
+              <!-- Left: pulsing ring -->
+              <div class="mock-emo-ring" id="mockEmoRing">
+                <span class="mock-emo-dot" id="mockEmoDot"></span>
+              </div>
+              <!-- Center: label + name -->
+              <div class="mock-emo-center">
+                <span class="mock-emo-label">Emotion detected</span>
+                <span class="mock-emo-name" id="mockLabel">Happy</span>
+              </div>
+              <!-- Right: big % -->
+              <div class="mock-emo-right">
+                <span class="mock-conf-big" id="mockConfValue">87%</span>
+                <span class="mock-conf-tiny">confidence</span>
+              </div>
+            </div>
+            <!-- Bottom confidence bar -->
+            <div class="mock-conf-bar-wrap">
+              <div class="mock-conf-fill" id="mockConfBar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════ MARQUEE ═══════════ -->
+<div class="marquee-section" aria-hidden="true">
+  <div class="marquee-track">
+    <span class="marquee-item">Real-time Emotion AI</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">IELTS Band Scoring</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Pitch Coaching</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Speech Analysis</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Instant Feedback</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Filler Word Detection</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Confidence Score</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Unlimited Practice</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Real-time Emotion AI</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">IELTS Band Scoring</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Pitch Coaching</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Speech Analysis</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Instant Feedback</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Filler Word Detection</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Confidence Score</span><span class="marquee-diamond">◆</span>
+    <span class="marquee-item">Unlimited Practice</span><span class="marquee-diamond">◆</span>
+  </div>
+</div>
+
+
+<!-- ═══════════ MODES ═══════════ -->
+<section class="section" id="modes">
+  <div class="container">
+    <div data-aos="fade-up">
+      <div class="sec-eyebrow">Modes</div>
+      <div class="sec-title">Choose your mode</div>
+    </div>
+    <div class="modes-list" data-aos="fade-up" data-aos-delay="80">
+
+      <!-- IELTS -->
+      <div class="mode-item open">
+        <div class="mode-trigger">
+          <div class="mode-left">
+            <span class="mode-num">01</span>
+            <span class="mode-name">IELTS Speaking</span>
+            <span class="mode-tag">Band scoring</span>
+          </div>
+          <svg class="mode-chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,7 9,12 14,7"/></svg>
+        </div>
+        <div class="mode-body">
+          <div class="mode-body-inner">
+            <ul class="mode-features">
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.6 3.5L8 10l-3.1 1.5.6-3.5L3 5.5l3.5-.5z"/></svg>
+                Band scoring rubric aligned to official criteria
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="9.5" x2="9" y2="9.5"/></svg>
+                Grammar and vocabulary depth analysis
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,9 5,6 8,8 11,5 14,7"/></svg>
+                Fluency and coherence feedback
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="6" r="3"/><path d="M5 12c0-1.7 1.3-3 3-3s3 1.3 3 3"/></svg>
+                Pronunciation awareness tips
+              </li>
+            </ul>
+            <a href="/coach" class="mode-cta-btn">Try IELTS →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pitch -->
+      <div class="mode-item">
+        <div class="mode-trigger">
+          <div class="mode-left">
+            <span class="mode-num">02</span>
+            <span class="mode-name">Pitch &amp; Interview</span>
+            <span class="mode-tag">Psychology-driven</span>
+          </div>
+          <svg class="mode-chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,7 9,12 14,7"/></svg>
+        </div>
+        <div class="mode-body">
+          <div class="mode-body-inner">
+            <ul class="mode-features">
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><polyline points="8,5 8,8 10,10"/></svg>
+                Hook and opening impact analysis
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2"/><circle cx="11" cy="6" r="2"/><path d="M1 14c0-2.2 1.8-4 4-4h6c2.2 0 4 1.8 4 4"/></svg>
+                Confidence and authority coaching
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="8,2 10,6 14,6.5 11,9.5 11.5,13.5 8,11.5 4.5,13.5 5,9.5 2,6.5 6,6"/></svg>
+                Story structure feedback
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="8" x2="11" y2="8"/></svg>
+                Investor psychology insights
+              </li>
+            </ul>
+            <a href="/coach" class="mode-cta-btn">Try Pitch →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Free Talk -->
+      <div class="mode-item">
+        <div class="mode-trigger">
+          <div class="mode-left">
+            <span class="mode-num">03</span>
+            <span class="mode-name">Free Talk</span>
+            <span class="mode-tag">No pressure</span>
+          </div>
+          <svg class="mode-chevron" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,7 9,12 14,7"/></svg>
+        </div>
+        <div class="mode-body">
+          <div class="mode-body-inner">
+            <ul class="mode-features">
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,10 5,6 8,8 11,4 14,6"/></svg>
+                Filler word detection and patterns
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><line x1="8" y1="8" x2="10.5" y2="8"/></svg>
+                Speaking pace and rhythm analysis
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c0 0 2-4 6-4s6 4 6 4"/><path d="M2 8c0 0 2-4 6-4s6 4 6 4"/></svg>
+                Flow and coherence scoring
+              </li>
+              <li class="mode-feat">
+                <svg class="feat-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,12 6,6 9,9 12,4 14,6"/></svg>
+                Vocabulary diversity metrics
+              </li>
+            </ul>
+            <a href="/coach" class="mode-cta-btn">Try Free Talk →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ HOW IT WORKS ═══════════ -->
+<section class="section howitworks" id="howitworks">
+  <div class="container">
+    <div data-aos="fade-up">
+      <div class="sec-eyebrow">Process</div>
+      <div class="sec-title">From practice to progress</div>
+    </div>
+    <div class="hiw-grid">
+
+      <div class="hiw-step" data-aos="fade-up" data-aos-delay="0">
+        <div class="hiw-num">01</div>
+        <div class="hiw-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="18" height="18" rx="2"/><line x1="2" y1="9" x2="20" y2="9"/><line x1="2" y1="15" x2="20" y2="15"/>
+          </svg>
+        </div>
+        <div class="hiw-title">Choose your mode</div>
+        <p class="hiw-desc">Pick IELTS, interview, or free talk. Each mode is tuned with its own scoring rubric and coaching logic.</p>
+        <span class="hiw-pill">IELTS · Pitch · Free Talk</span>
+      </div>
+
+      <div class="hiw-step" data-aos="fade-up" data-aos-delay="100">
+        <div class="hiw-num">02</div>
+        <div class="hiw-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="14" height="12" rx="2"/><polyline points="16,9 20,6 20,16 16,13"/>
+          </svg>
+        </div>
+        <div class="hiw-title">Record yourself</div>
+        <p class="hiw-desc">Speak naturally. Affecta reads your emotions, vocal confidence, and pace simultaneously in real time.</p>
+        <span class="hiw-pill">Emotion · Voice · Pace</span>
+      </div>
+
+      <div class="hiw-step" data-aos="fade-up" data-aos-delay="200">
+        <div class="hiw-num">03</div>
+        <div class="hiw-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 3l1.5 4h4l-3.5 2.5 1.5 4.5L11 11.5 7.5 14 9 9.5 5.5 7h4z"/>
+          </svg>
+        </div>
+        <div class="hiw-title">Get AI feedback</div>
+        <p class="hiw-desc">Receive targeted coaching — what worked, what to fix, and concrete drills to level up for next time.</p>
+        <span class="hiw-pill">Instant · Specific · Actionable</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ TESTIMONIALS ═══════════ -->
+<section class="section testimonials" id="reviews">
+  <div class="container">
+    <div data-aos="fade-up">
+      <div class="sec-eyebrow">Reviews</div>
+      <div class="sec-title">Real results, real people</div>
+    </div>
+    <div class="reviews-scroll" data-aos="fade-up" data-aos-delay="80">
+
+      <div class="review-card c1">
+        <div class="review-stars">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+        </div>
+        <p class="review-quote">"Improved my IELTS speaking band from 6.5 to 7.5 in just 3 weeks. The emotion analysis showed me I was nervous even when I thought I wasn't."</p>
+        <div class="review-footer">
+          <div class="review-avatar" style="background:#1e3a5f">AK</div>
+          <div><div class="review-name">Aizat K.</div><div class="review-city">Almaty</div></div>
+        </div>
+      </div>
+
+      <div class="review-card c2">
+        <div class="review-stars">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+        </div>
+        <p class="review-quote">"Practiced my startup pitch here every day. Won the hackathon and got noticed by two investors. Couldn't have done it without Affecta."</p>
+        <div class="review-footer">
+          <div class="review-avatar" style="background:#2e1065">DM</div>
+          <div><div class="review-name">Dilnoza M.</div><div class="review-city">Tashkent</div></div>
+        </div>
+      </div>
+
+      <div class="review-card c3">
+        <div class="review-stars">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+        </div>
+        <p class="review-quote">"Finally understood why my interviews weren't going well — I was coming across as uncertain. Fixed it in a week of daily practice."</p>
+        <div class="review-footer">
+          <div class="review-avatar" style="background:#064e3b">RT</div>
+          <div><div class="review-name">Ruslan T.</div><div class="review-city">Astana</div></div>
+        </div>
+      </div>
+
+      <div class="review-card c4">
+        <div class="review-stars">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="#f59e0b"><polygon points="7,1 8.8,5.2 13.5,5.5 10,8.5 11,13 7,10.5 3,13 4,8.5 0.5,5.5 5.2,5.2"/></svg>
+        </div>
+        <p class="review-quote">"I never realized how visible my emotions were on my face. Now I control it consciously and come across as calm and confident."</p>
+        <div class="review-footer">
+          <div class="review-avatar" style="background:#1c1917">SA</div>
+          <div><div class="review-name">Saule A.</div><div class="review-city">Nur-Sultan</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ CTA ═══════════ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-box" data-aos="fade-up">
+      <div class="cta-corner tl"></div>
+      <div class="cta-corner tr"></div>
+      <div class="cta-corner bl"></div>
+      <div class="cta-corner br"></div>
+      <h2 class="cta-title">Ready to speak?</h2>
+      <p class="cta-sub">Start practicing now. No signup required. Results from day one.</p>
+      <a href="/coach" class="btn-white">Start Practicing →</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-main">
+      <div>
+        <div class="footer-logo">
+          <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+            <rect x="2" y="9" width="4" height="13" rx="2" fill="#3b82f6"/>
+            <rect x="9" y="3" width="4" height="19" rx="2" fill="#6366f1"/>
+            <rect x="16" y="7" width="4" height="15" rx="2" fill="#3b82f6"/>
+          </svg>
+          Affecta
+        </div>
+        <div class="footer-brand-tag">Your AI Speaking Coach</div>
+      </div>
+      <div class="footer-year">2026</div>
+    </div>
+    <p class="footer-motto">"Speak boldly. Grow daily. Be confident with Affecta."</p>
+  </div>
+</footer>
+
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+<script>
+AOS.init({duration:600,easing:'ease-out-cubic',once:true,offset:60});
+
+/* Navbar */
+const navbar=document.getElementById('navbar');
+window.addEventListener('scroll',()=>navbar.classList.toggle('scrolled',scrollY>24),{passive:true});
+
+/* Photos */
+const photos=['/static/images/IMG_2603.jpg','/static/images/IMG_2604.jpg','/static/images/istockphoto-1376381279-612x612.jpg'];
+const mockPhoto=document.getElementById('mockPhoto');
+let pIdx=0;
+function loadImg(s){return new Promise(r=>{const i=new Image();i.onload=r;i.onerror=r;i.src=s})}
+async function initPhotos(){await Promise.all(photos.map(loadImg));mockPhoto.src=photos[0];mockPhoto.style.opacity='1'}
+function cyclePhoto(){mockPhoto.style.opacity='0';setTimeout(()=>{pIdx=(pIdx+1)%photos.length;mockPhoto.src=photos[pIdx];mockPhoto.style.opacity='1'},600)}
+initPhotos();setInterval(cyclePhoto,3500);
+
+/* Emotions */
+const emos=[
+  {l:'Happy',    c:87, col:'#4ade80'},
+  {l:'Neutral',  c:62, col:'#94a3b8'},
+  {l:'Surprised',c:74, col:'#fbbf24'},
+  {l:'Confident',c:91, col:'#3b82f6'},
+];
+const mPanel=document.querySelector('.mock-overlay-panel');
+const mLabel=document.getElementById('mockLabel');
+const mVal=document.getElementById('mockConfValue'),mBar=document.getElementById('mockConfBar');
+let eIdx=0;
+function cycleEmo(){
+  const e=emos[eIdx%emos.length];eIdx++;
+  /* Update CSS custom property — drives ring border, dot bg, bar gradient, big number gradient */
+  mPanel.style.setProperty('--emo-col',e.col);
+  mLabel.textContent=e.l;
+  mVal.textContent=e.c+'%';
+  mBar.style.width='0%';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{mBar.style.width=e.c+'%'}));
+}
+cycleEmo();setInterval(cycleEmo,2500);
+
+/* Parallax tilt */
+if(window.matchMedia('(hover:hover)').matches){
+  const card=document.querySelector('.mockup-card');
+  document.addEventListener('mousemove',e=>{
+    const rect=card.getBoundingClientRect();
+    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+    const dx=(e.clientX-cx)/window.innerWidth,dy=(e.clientY-cy)/window.innerHeight;
+    card.style.transform=`perspective(1000px) rotateY(${dx*8}deg) rotateX(${-dy*8}deg)`;
+  },{passive:true});
+  document.addEventListener('mouseleave',()=>{
+    card.style.transform='perspective(1000px) rotateY(0deg) rotateX(0deg)';
+  });
+}
+
+/* ── Hero entrance ───────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded',()=>{
+  const anims=[
+    {id:'ha-line1',   delay:0},
+    {id:'wordCycle',  delay:300},
+    {id:'ha-sub',     delay:450},
+    {id:'ha-actions', delay:600},
+    {id:'ha-checks',  delay:750},
+    {id:'ha-mockup',  delay:200},
+  ];
+  anims.forEach(({id,delay})=>{
+    const el=document.getElementById(id);
+    if(el) setTimeout(()=>el.classList.add('animate-in'),delay);
+  });
+});
+
+/* ── Typewriter ──────────────────────────────────────────────────────────── */
+const twWords=['Confidence','IELTS','Every Pitch','Any Interview'];
+const twTextEl=document.getElementById('twText');
+let twIdx=0,twTyping=true,twCharIdx=0;
+
+function typewriterTick(){
+  const word=twWords[twIdx];
+  if(twTyping){
+    twCharIdx++;
+    twTextEl.textContent=word.slice(0,twCharIdx);
+    if(twCharIdx<word.length){
+      setTimeout(typewriterTick,80);
+    } else {
+      setTimeout(()=>{twTyping=false;typewriterTick();},1800);
+    }
+  } else {
+    twCharIdx--;
+    twTextEl.textContent=word.slice(0,twCharIdx);
+    if(twCharIdx>0){
+      setTimeout(typewriterTick,40);
+    } else {
+      twIdx=(twIdx+1)%twWords.length;
+      twTyping=true;
+      setTimeout(typewriterTick,180);
+    }
+  }
+}
+
+// Start after entrance delay for word-cycle element (300ms + 700ms transition)
+setTimeout(()=>{twTextEl.textContent='';typewriterTick();},900);
+
+/* ── Navbar active section highlight ─────────────────────────────────────── */
+const navLinks=document.querySelectorAll('.nav-pill a');
+const observedIds=['modes','howitworks','reviews'];
+
+const sectionObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      navLinks.forEach(a=>a.classList.remove('nav-active'));
+      const match=document.querySelector(`.nav-pill a[href="#${entry.target.id}"]`);
+      if(match) match.classList.add('nav-active');
+    }
+  });
+},{threshold:0.3});
+
+observedIds.forEach(id=>{const el=document.getElementById(id);if(el)sectionObserver.observe(el);});
+
+/* Modes accordion */
+document.querySelectorAll('.mode-item').forEach(item=>{
+  item.querySelector('.mode-trigger').addEventListener('click',()=>{
+    const was=item.classList.contains('open');
+    document.querySelectorAll('.mode-item').forEach(m=>m.classList.remove('open'));
+    if(!was)item.classList.add('open');
+  });
+});
+</script>
+</body>
+</html>

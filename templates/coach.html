@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affecta — Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/coach.css') }}">
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav class="coach-nav">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">A</div>
+    <span>Affecta</span>
+  </a>
+  <div class="nav-links">
+    <a href="/coach" class="nav-link active">Coach</a>
+    <a href="/history" class="nav-link">History</a>
+    <a href="/progress" class="nav-link">Progress</a>
+    <a href="/profile" class="nav-link">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"/></svg>
+      Profile
+    </a>
+  </div>
+</nav>
+
+<!-- ── MAIN LAYOUT ───────────────────────────────────────────────────────── -->
+<div class="coach-wrap">
+<div class="coach-grid">
+
+  <!-- ── LEFT: Camera ───────────────────────────────────────────────────── -->
+  <div class="cam-col">
+
+    <!-- Topic display — shown during countdown and recording -->
+    <div class="topic-display hidden" id="topicDisplay">
+      <div class="topic-display-label" id="topicDisplayLabel">YOUR TOPIC</div>
+      <div class="topic-display-text" id="topicDisplayText">—</div>
+      <div class="topic-display-bullets hidden" id="topicDisplayBullets">
+        <div class="td-bullet">👤 Who?</div>
+        <div class="td-bullet">📝 What?</div>
+        <div class="td-bullet">📅 When?</div>
+        <div class="td-bullet">📍 Where?</div>
+        <div class="td-bullet">💡 Why?</div>
+      </div>
+    </div>
+
+    <div class="cam-card glass">
+      <div class="cam-header">
+        <span class="live-badge" id="liveBadge">Live</span>
+        <span class="rec-badge hidden" id="recBadge">Rec</span>
+      </div>
+      <div class="cam-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div class="cam-loading" id="camLoading">
+          <div class="spinner"></div>
+          <p>Starting camera…</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-stats hidden" id="recStats">
+      <div class="stat-pill timer" id="timerPill">00:00</div>
+      <div class="stat-pill filler" id="fillerPill">0 fillers</div>
+      <div class="stat-pill samples" id="samplePill">0 samples</div>
+    </div>
+
+    <button class="stop-btn hidden" id="stopBtn">⏹ Stop Recording</button>
+
+  </div>
+
+  <!-- ── RIGHT: Flow ────────────────────────────────────────────────────── -->
+  <div class="flow-col">
+
+    <div class="flow-header">
+      <h1>New Session</h1>
+      <p>Configure your practice session</p>
+    </div>
+
+    <!-- Daily Challenge Banner (hidden until loaded) -->
+    <div class="challenge-banner hidden" id="challengeBanner">
+      <div class="challenge-left">
+        <span class="challenge-icon">🎯</span>
+        <div class="challenge-info">
+          <div class="challenge-title">Today's Challenge</div>
+          <div class="challenge-topic" id="challengeTopic">—</div>
+          <div class="challenge-meta">
+            <span class="challenge-part" id="challengePart">Part 1</span>
+            <span class="challenge-hint">Complete this to maintain your streak</span>
+          </div>
+        </div>
+      </div>
+      <button class="challenge-start-btn" id="challengeStartBtn">Start Challenge →</button>
+    </div>
+
+    <div class="steps" id="steps">
+
+      <!-- Step 1: Mode -->
+      <div class="step active" id="step1" data-step="1">
+        <div class="step-header" onclick="toggleStep(1)">
+          <div class="step-num"><span class="step-num-inner">1</span></div>
+          <div class="step-title-wrap">
+            <div class="step-title">Mode</div>
+            <div class="step-value" id="step1Val">Choose practice type</div>
+          </div>
+          <svg class="step-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 6 8 10 12 6"/>
+          </svg>
+        </div>
+        <div class="step-body">
+          <div class="mode-grid">
+            <button class="mode-btn mode-btn--featured" data-mode="ielts_sim" onclick="selectMode('ielts_sim')">
+              <div class="mode-icon">🎯</div>
+              <div class="mode-text">
+                <div class="mode-name">Full IELTS Simulation</div>
+                <div class="mode-desc">AI examiner · all 3 parts · band score</div>
+              </div>
+              <span class="mode-new-badge">NEW</span>
+            </button>
+            <button class="mode-btn" data-mode="ielts" onclick="selectMode('ielts')">
+              <div class="mode-icon">🎓</div>
+              <div class="mode-text">
+                <div class="mode-name">IELTS Practice</div>
+                <div class="mode-desc">Single part, band-scored feedback</div>
+              </div>
+            </button>
+            <button class="mode-btn" data-mode="pitch" onclick="selectMode('pitch')">
+              <div class="mode-icon">💼</div>
+              <div class="mode-text">
+                <div class="mode-name">Pitch &amp; Interview</div>
+                <div class="mode-desc">Startup pitch, job interview, presentation</div>
+              </div>
+            </button>
+            <button class="mode-btn" data-mode="free" onclick="selectMode('free')">
+              <div class="mode-icon">💬</div>
+              <div class="mode-text">
+                <div class="mode-name">Free Talk</div>
+                <div class="mode-desc">Open practice, any topic</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Submode -->
+      <div class="step locked" id="step2" data-step="2">
+        <div class="step-header" onclick="toggleStep(2)">
+          <div class="step-num"><span class="step-num-inner">2</span></div>
+          <div class="step-title-wrap">
+            <div class="step-title">Format</div>
+            <div class="step-value" id="step2Val">Select after choosing mode</div>
+          </div>
+          <svg class="step-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 6 8 10 12 6"/>
+          </svg>
+        </div>
+        <div class="step-body" id="step2Body">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+
+      <!-- Step 3: Topic -->
+      <div class="step locked" id="step3" data-step="3">
+        <div class="step-header" onclick="toggleStep(3)">
+          <div class="step-num"><span class="step-num-inner">3</span></div>
+          <div class="step-title-wrap">
+            <div class="step-title">Topic</div>
+            <div class="step-value" id="step3Val">Select after choosing format</div>
+          </div>
+          <svg class="step-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 6 8 10 12 6"/>
+          </svg>
+        </div>
+        <div class="step-body" id="step3Body">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+
+      <!-- Step 4: Duration -->
+      <div class="step locked" id="step4" data-step="4">
+        <div class="step-header" onclick="toggleStep(4)">
+          <div class="step-num"><span class="step-num-inner">4</span></div>
+          <div class="step-title-wrap">
+            <div class="step-title">Duration</div>
+            <div class="step-value" id="step4Val">Set session length</div>
+          </div>
+          <svg class="step-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 6 8 10 12 6"/>
+          </svg>
+        </div>
+        <div class="step-body">
+          <div class="duration-grid">
+            <button class="dur-btn" data-dur="30" onclick="selectDuration(30)">30s</button>
+            <button class="dur-btn selected" data-dur="60" onclick="selectDuration(60)">1 min</button>
+            <button class="dur-btn" data-dur="120" onclick="selectDuration(120)">2 min</button>
+            <button class="dur-btn" data-dur="180" onclick="selectDuration(180)">3 min</button>
+          </div>
+          <div class="lang-wrap">
+            <button class="lang-btn selected" data-lang="english" onclick="selectLang('english')">English</button>
+            <button class="lang-btn" data-lang="russian" onclick="selectLang('russian')">Русский</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Start -->
+      <div class="step locked" id="step5" data-step="5">
+        <div class="step-header" onclick="toggleStep(5)">
+          <div class="step-num"><span class="step-num-inner">5</span></div>
+          <div class="step-title-wrap">
+            <div class="step-title">Start</div>
+            <div class="step-value" id="step5Val">Ready to record</div>
+          </div>
+          <svg class="step-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 6 8 10 12 6"/>
+          </svg>
+        </div>
+        <div class="step-body">
+          <div class="start-section">
+            <div class="session-summary" id="sessionSummary"></div>
+            <button class="start-btn" id="startBtn" onclick="beginCountdown()">
+              Start Recording
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /steps -->
+
+    <!-- ── IELTS SIMULATION PANEL ──────────────────────────────────────── -->
+    <div id="ieltsPanel" class="ielts-panel hidden">
+
+      <!-- Header bar: part · question count · timer -->
+      <div class="ielts-header-bar">
+        <div class="ielts-part-left">
+          <span class="ielts-part-badge" id="ieltsBadge">PART 1</span>
+          <span class="ielts-q-count" id="ieltsQCount">Question 1 / 9</span>
+        </div>
+        <div class="ielts-timer" id="ieltsTimer">5:00</div>
+      </div>
+      <div class="ielts-progress-track">
+        <div class="ielts-progress-fill" id="ieltsProgressFill"></div>
+      </div>
+
+      <!-- Chat stream -->
+      <div class="ielts-chat" id="ieltsChat"></div>
+
+      <!-- Part 2 cue card (hidden until Part 2) -->
+      <div class="ielts-cue-card hidden" id="ieltsCueCard">
+        <div class="cue-card-header">
+          <span class="cue-label">CUE CARD</span>
+          <span class="cue-prep-pill" id="cuePrepPill">PREPARATION TIME</span>
+        </div>
+        <div class="cue-topic" id="cueTopic"></div>
+        <ul class="cue-bullets" id="cueBullets"></ul>
+        <textarea class="cue-notes" id="cueNotes" placeholder="Make notes here during preparation time…"></textarea>
+        <div class="cue-prep-footer">
+          <span class="cue-prep-label">Time remaining:</span>
+          <span class="cue-prep-timer" id="cuePrepTimer">1:00</span>
+        </div>
+      </div>
+
+      <!-- Answer / recording controls -->
+      <div class="ielts-controls hidden" id="ieltsControls">
+        <div class="ielts-answer-wrap">
+          <button class="ielts-answer-btn" id="ieltsAnswerBtn">
+            <span class="answer-mic">🎤</span>
+            <span class="answer-label" id="ieltsAnswerLabel">Answer</span>
+          </button>
+          <div class="answer-meta">
+            <div class="answer-time hidden" id="ieltsAnswerTime">0:00</div>
+            <div class="answer-max hidden" id="ieltsAnswerMax"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part transition screen -->
+      <div class="ielts-transition hidden" id="ieltsTransition">
+        <div class="trans-check">✓</div>
+        <div class="trans-title" id="transTitle">Part 1 Complete</div>
+        <div class="trans-sub" id="transSub">Starting Part 2 in 5 seconds…</div>
+        <div class="trans-countdown" id="transCountdown">5</div>
+      </div>
+
+    </div><!-- /ieltsPanel -->
+
+  </div><!-- /flow-col -->
+
+</div><!-- /coach-grid -->
+</div><!-- /coach-wrap -->
+
+<!-- ── COUNTDOWN OVERLAY ─────────────────────────────────────────────────── -->
+<div class="countdown-overlay hidden" id="countdownOverlay">
+  <div class="countdown-num" id="countdownNum">3</div>
+</div>
+
+<!-- ── IELTS PART 2 PREP SCREEN ──────────────────────────────────────────── -->
+<div class="prep-overlay hidden" id="prepOverlay">
+  <div class="prep-card glass">
+    <div class="prep-top">
+      <span class="prep-badge">PREPARATION TIME</span>
+      <div class="prep-timer-wrap">
+        <div class="prep-timer" id="prepTimer">1:00</div>
+        <div class="prep-timer-label">seconds remaining</div>
+      </div>
+    </div>
+    <div>
+      <div class="prep-topic-label">Your Topic</div>
+      <div class="prep-topic-text" id="prepTopicText"></div>
+    </div>
+    <div class="prep-bullets">
+      <div class="prep-bullet">👤 <span>Who?</span></div>
+      <div class="prep-bullet">📝 <span>What?</span></div>
+      <div class="prep-bullet">📅 <span>When?</span></div>
+      <div class="prep-bullet">📍 <span>Where?</span></div>
+      <div class="prep-bullet">💡 <span>Why?</span></div>
+    </div>
+    <textarea id="prepNotes" class="prep-notes" placeholder="Make notes here during your preparation time…" rows="4"></textarea>
+    <button class="prep-skip-btn" onclick="skipPrep()">Skip preparation →</button>
+  </div>
+</div>
+
+<!-- ── PROCESSING OVERLAY ────────────────────────────────────────────────── -->
+<div class="processing-overlay hidden" id="processingOverlay">
+  <div class="processing-card glass">
+    <div class="spinner-lg"></div>
+    <h2>Processing session</h2>
+    <p class="status-text" id="processingStatus">Transcribing audio…</p>
+    <div class="progress-track">
+      <div class="progress-fill" id="processingBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="{{ url_for('static', filename='js/coach.js') }}"></script>
+</body>
+</html>
