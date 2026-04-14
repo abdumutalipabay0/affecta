@@ -5,6 +5,7 @@ All routes import from here instead of defining their own clients.
 """
 
 import os
+from typing import Optional
 
 from flask import session as flask_session
 from supabase import create_client as _create_supabase_client
@@ -17,7 +18,7 @@ supabase = _create_supabase_client(_SUPA_URL, _SUPA_KEY)
 print("[supabase] Client ready")
 
 
-def _supa(access_token: str | None = None):
+def _supa(access_token: Optional[str] = None):
     """Return a fresh Supabase client, optionally authenticated with a user JWT.
     A new client per request avoids shared-state issues in threaded Flask."""
     client = _create_supabase_client(_SUPA_URL, _SUPA_KEY)
@@ -26,7 +27,7 @@ def _supa(access_token: str | None = None):
     return client
 
 
-def _refresh_access_token() -> str | None:
+def _refresh_access_token() -> Optional[str]:
     """Use the stored refresh_token to get a new access_token.
     Updates flask_session in-place. Returns the new token or None on failure."""
     refresh_token = flask_session.get("refresh_token")

@@ -29,6 +29,7 @@ def save_session():
     print(f"  data keys:    {list(data.keys())}")
     print(f"  mode:         {data.get('mode')!r}")
     print(f"  transcript:   {str(data.get('transcript', ''))[:80]!r}")
+    print(f"  words count:  {len(data.get('words', []))}")
 
     if not user_id or not access_token:
         print("  ERROR: not authenticated — aborting")
@@ -41,6 +42,7 @@ def save_session():
         int(data.get("filler_count") or 0),
         float(data.get("duration") or 0),
     )
+    words = data.get("words", [])
     row = {
         "user_id":          user_id,
         "mode":             data.get("mode"),
@@ -48,6 +50,7 @@ def save_session():
         "topic":            data.get("topic"),
         "duration":         int(float(data.get("duration") or 0)),
         "transcript":       data.get("transcript"),
+        "words":            words if isinstance(words, list) else [],
         "overall_score":    overall_score,
         "confidence_avg":   float(data.get("confidence_avg") or 0),
         "filler_count":     int(data.get("filler_count") or 0),
@@ -57,6 +60,7 @@ def save_session():
         "language":         data.get("language", "english"),
     }
     print(f"  overall_score: {overall_score}")
+    print(f"  words:         {len(words)} word timestamps")
     print(f"  inserting row with user_id={user_id!r}")
     try:
         result = _supa_exec(
@@ -120,7 +124,14 @@ def api_session(session_id: str):
             .single()
             .execute()
         )
-        return jsonify(result.data)
+        row = result.data or {}
+        # Normalise JSONB array fields — older rows may have null instead of []
+        for field in ("words", "emotion_timeline", "filler_words"):
+            if not isinstance(row.get(field), list):
+                if row.get(field) is not None:
+                    print(f"[api_session] WARNING: {field} is not a list for session {session_id} — coercing to []")
+                row[field] = []
+        return jsonify(row)
     except Exception as exc:
         print(f"[supabase] api_session error: {exc}")
         return jsonify({"error": "not found"}), 404
