@@ -54,13 +54,26 @@ def _parse_hume_predictions(predictions) -> list[dict]:
                         emotions = getattr(pred, "emotions", None) or []
                         if not emotions:
                             continue
-                        sorted_emos = sorted(emotions, key=lambda e: float(e.score or 0), reverse=True)
+                        # Boost core emotions, penalize passive/cognitive states for top selection
+                        core_emotions = {"joy", "happiness", "amusement", "sadness", "anger", "fear", "surprise", "excitement", "calmness"}
+                        passive_states = {"concentration", "boredom", "doubt", "confusion"}
+
+                        def _sort_weight(e):
+                            name = (e.name or "").lower()
+                            score = float(e.score or 0)
+                            if name in core_emotions: return score * 1.5
+                            if name in passive_states: return score * 0.7
+                            return score
+
+                        sorted_emos = sorted(emotions, key=_sort_weight, reverse=True)
+                        raw_sorted_emos = sorted(emotions, key=lambda e: float(e.score or 0), reverse=True)
+                        
                         top         = sorted_emos[0]
                         top_name    = (top.name or "neutral").lower()
                         top_score   = round(float(top.score or 0) * 100, 1)
                         all_emos    = {
                             e.name.lower(): round(float(e.score or 0) * 100, 1)
-                            for e in sorted_emos[:8]
+                            for e in raw_sorted_emos[:8]
                         }
                         timeline.append({
                             "timestamp":    round(t_sec, 3),
