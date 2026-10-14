@@ -1,3 +1,24 @@
+<h1 align="center">Affecta · speaking side quest</h1>
+
+<p align="center">
+  <img src="./readme-assets/rei-smile.jpg" width="400" alt="Rei Ayanami with a :3 smile" />
+</p>
+
+> brain: fluent. mouth: uhhhh :3
+
+AI-тренер для IELTS Speaking: говоришь, получаешь разбор и смотришь, как меняются сессии.
+
+- **Dialogue mode:** Parts 1, 2 и 3.
+- **Replay:** транскрипт, AI-feedback и таймлайн эмоций.
+- **XP screen:** прогресс, слова-паразиты и серии практики.
+
+`Flask` · `Supabase` · `Groq Whisper / LLaMA` · `Hume AI — опционально`
+
+*Это тренировочный разбор, не официальный IELTS band. Финальный босс всё ещё экзаменатор.*
+
+<details>
+<summary>Открыть мануал: запуск, устройство и подробности</summary>
+
 # Affecta
 
 AI-powered IELTS speaking coach. Practice speaking, get real-time AI feedback, and track your emotional and performance trends over time.
@@ -137,3 +158,5 @@ overall_score = clamp(0, 100, confidence_avg − min(filler_count × 3, 30) + mi
 ## License
 
 Tony Stark approved
+
+</details>
